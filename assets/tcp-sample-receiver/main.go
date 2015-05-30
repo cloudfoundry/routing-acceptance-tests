@@ -50,11 +50,11 @@ func handleRequest(conn net.Conn) {
 	// Continue to receive the data forever...
 	for {
 		// Read the incoming connection into the buffer.
-		_, err := conn.Read(buff)
+		bytes, err := conn.Read(buff)
 		if err != nil {
 			fmt.Println("Closing connection:", err.Error())
 			return
 		}
-		fmt.Print(string(buff))
+		fmt.Print(string(buff[0:bytes]))
 	}
 }
