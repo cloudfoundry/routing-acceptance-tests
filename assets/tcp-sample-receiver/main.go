@@ -56,5 +56,10 @@ func handleRequest(conn net.Conn) {
 			return
 		}
 		fmt.Print(string(buff[0:bytes]))
+		_, err = conn.Write(buff[0:bytes])
+		if err != nil {
+			fmt.Println("Closing connection:", err.Error())
+			return
+		}
 	}
 }
