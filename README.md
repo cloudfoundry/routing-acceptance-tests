@@ -23,6 +23,7 @@ cat > router_config.json <<EOF
     "port": 9999
 }
 EOF
+export ROUTER_API_CONFIG=$PWD/router_config.json
 ```
 
 ### Running the tests
