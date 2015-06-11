@@ -11,8 +11,7 @@ To run the Router Acceptance tests, you will need:
 - make sure that all the dependencies of this module are installed in your GOPATH (alternatively if you have cloned the [router-release](https://github.com/GESoftware-CF/router-release) make sure that your GOPATH is set to root directory of router-release)
 - an environment variable `ROUTER_API_CONFIG` which points to a `.json` file that contains the router api endpoint
 
-The following commands will setup the `ROUTER_API_CONFIG` for a [bosh-lite](https://github.com/cloudfoundry/bosh-lite)
-installation. Replace config as appropriate for your environment.
+The following commands will create a config file `router_config.json` for a [bosh-lite](https://github.com/cloudfoundry/bosh-lite) installation and set the `ROUTER_API_CONFIG` environment variable to the path for this file. Edit `router_config.json` as appropriate for your environment.
 
 
 ```bash
