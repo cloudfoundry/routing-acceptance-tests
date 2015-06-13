@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"time"
@@ -23,11 +22,15 @@ const (
 var _ = Describe("Routing Test", func() {
 
 	Describe("A sample receiver running as a separate process", func() {
-		var routerHostInfo cf_tcp_router.RouterHostInfo
+		var externalPort uint16
 
 		BeforeEach(func() {
-			createMappingRequest := cf_tcp_router.BackendHostInfos{
+			externalPort = 52000
+			backends := cf_tcp_router.BackendHostInfos{
 				cf_tcp_router.NewBackendHostInfo(externalIP, uint16(sampleReceiverPort)),
+			}
+			createMappingRequest := cf_tcp_router.MappingRequests{
+				cf_tcp_router.NewMappingRequest(externalPort, backends),
 			}
 			payload, err := json.Marshal(createMappingRequest)
 			Expect(err).ToNot(HaveOccurred())
@@ -38,15 +41,11 @@ var _ = Describe("Routing Test", func() {
 				"application/json", bytes.NewBuffer(payload))
 			Expect(err).ToNot(HaveOccurred())
 
-			responseBody, err := ioutil.ReadAll(resp.Body)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			err = json.Unmarshal(responseBody, &routerHostInfo)
-			Expect(err).ShouldNot(HaveOccurred())
+			Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 		})
 
 		It("Routes traffic to sample receiver", func() {
-			address := fmt.Sprintf("%s:%d", routerHostInfo.Address, routerHostInfo.Port)
+			address := fmt.Sprintf("%s:%d", routerApiConfig.Address, externalPort)
 			Eventually(func() error {
 				tmpconn, err := net.Dial(CONN_TYPE, address)
 				if err == nil {
