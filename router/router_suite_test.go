@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/GESoftware-CF/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver/testrunner"
+	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver/testrunner"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -14,8 +14,8 @@ import (
 
 	"testing"
 
-	"github.com/GESoftware-CF/cf-tcp-router-acceptance-tests/helpers"
-	"github.com/GESoftware-CF/cf-tcp-router/testutil"
+	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/helpers"
+	"github.com/cloudfoundry-incubator/cf-tcp-router/testutil"
 )
 
 func TestRouter(t *testing.T) {
@@ -32,7 +32,7 @@ var (
 )
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-	sampleReceiver, err := gexec.Build("github.com/GESoftware-CF/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver", "-race")
+	sampleReceiver, err := gexec.Build("github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver", "-race")
 	Expect(err).NotTo(HaveOccurred())
 	payload, err := json.Marshal(map[string]string{
 		"sample-receiver": sampleReceiver,
