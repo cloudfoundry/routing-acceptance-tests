@@ -21,14 +21,10 @@ func TestRouter(t *testing.T) {
 }
 
 var (
-	sampleReceiverPort1 int
-	sampleReceiverPort2 int
-	sampleReceiverPath  string
-	externalIP          string
-	routerApiConfig     helpers.RouterApiConfig
-	serverId1           string
-	serverId2           string
-	logger              lager.Logger
+	sampleReceiverPath string
+	externalIP         string
+	routerApiConfig    helpers.RouterApiConfig
+	logger             lager.Logger
 )
 
 var _ = SynchronizedBeforeSuite(func() []byte {
@@ -47,10 +43,6 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	err := json.Unmarshal(payload, &context)
 	Expect(err).NotTo(HaveOccurred())
 
-	sampleReceiverPort1 = 9000 + GinkgoParallelNode()
-	sampleReceiverPort2 = 9500 + GinkgoParallelNode()
-	serverId1 = "serverId1"
-	serverId2 = "serverId2"
 	sampleReceiverPath = context["sample-receiver"]
 	externalIP = testutil.GetExternalIP()
 	routerApiConfig = helpers.LoadConfig()
