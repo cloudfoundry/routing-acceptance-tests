@@ -2,15 +2,12 @@ package router
 
 import (
 	"encoding/json"
-	"fmt"
-	"time"
 
-	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver/testrunner"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"github.com/tedsuo/ifrit"
-	"github.com/tedsuo/ifrit/ginkgomon"
+	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
 
 	"testing"
 
@@ -24,11 +21,14 @@ func TestRouter(t *testing.T) {
 }
 
 var (
-	sampleReceiverPort    int
-	sampleReceiverPath    string
-	externalIP            string
-	sampleReceiverProcess ifrit.Process
-	routerApiConfig       helpers.RouterApiConfig
+	sampleReceiverPort1 int
+	sampleReceiverPort2 int
+	sampleReceiverPath  string
+	externalIP          string
+	routerApiConfig     helpers.RouterApiConfig
+	serverId1           string
+	serverId2           string
+	logger              lager.Logger
 )
 
 var _ = SynchronizedBeforeSuite(func() []byte {
@@ -47,23 +47,14 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	err := json.Unmarshal(payload, &context)
 	Expect(err).NotTo(HaveOccurred())
 
-	sampleReceiverPort = 7000 + GinkgoParallelNode()
+	sampleReceiverPort1 = 9000 + GinkgoParallelNode()
+	sampleReceiverPort2 = 9500 + GinkgoParallelNode()
+	serverId1 = "serverId1"
+	serverId2 = "serverId2"
 	sampleReceiverPath = context["sample-receiver"]
 	externalIP = testutil.GetExternalIP()
 	routerApiConfig = helpers.LoadConfig()
-})
-
-var _ = BeforeEach(func() {
-	sampleReceiverArgs := testrunner.Args{
-		Address: fmt.Sprintf("%s:%d", externalIP, sampleReceiverPort),
-	}
-
-	runner := testrunner.New(sampleReceiverPath, sampleReceiverArgs)
-	sampleReceiverProcess = ifrit.Invoke(runner)
-})
-
-var _ = AfterEach(func() {
-	ginkgomon.Kill(sampleReceiverProcess, 5*time.Second)
+	logger = lagertest.NewTestLogger("test")
 })
 
 var _ = SynchronizedAfterSuite(func() {

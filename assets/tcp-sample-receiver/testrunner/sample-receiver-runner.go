@@ -8,12 +8,14 @@ import (
 )
 
 type Args struct {
-	Address string
+	Address  string
+	ServerId string
 }
 
 func (args Args) ArgSlice() []string {
 	return []string{
 		"-address=" + args.Address,
+		"-serverId=" + args.ServerId,
 	}
 }
 

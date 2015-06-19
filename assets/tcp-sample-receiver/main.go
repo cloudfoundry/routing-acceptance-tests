@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"net"
@@ -8,14 +9,21 @@ import (
 )
 
 const (
-	DEFAULT_ADDRESS = "localhost:3333"
-	CONN_TYPE       = "tcp"
+	DEFAULT_ADDRESS   = "localhost:3333"
+	CONN_TYPE         = "tcp"
+	DEFAULT_SERVER_ID = "sample_server"
 )
 
 var serverAddress = flag.String(
 	"address",
 	DEFAULT_ADDRESS,
 	"The host:port that the server is bound to.",
+)
+
+var serverId = flag.String(
+	"serverId",
+	DEFAULT_SERVER_ID,
+	"The Server id that is echoed back for each message.",
 )
 
 func main() {
@@ -28,7 +36,7 @@ func main() {
 	}
 	// Close the listener when the application closes.
 	defer listener.Close()
-	fmt.Println("Listening on " + *serverAddress)
+	fmt.Printf("%s:Listening on %s\n", *serverId, *serverAddress)
 	for {
 		// Listen for an incoming connection.
 		conn, err := listener.Accept()
@@ -50,13 +58,17 @@ func handleRequest(conn net.Conn) {
 	// Continue to receive the data forever...
 	for {
 		// Read the incoming connection into the buffer.
-		bytes, err := conn.Read(buff)
+		readBytes, err := conn.Read(buff)
 		if err != nil {
 			fmt.Println("Closing connection:", err.Error())
 			return
 		}
-		fmt.Print(string(buff[0:bytes]))
-		_, err = conn.Write(buff[0:bytes])
+		var writeBuffer bytes.Buffer
+		writeBuffer.WriteString(*serverId)
+		writeBuffer.WriteString(":")
+		writeBuffer.Write(buff[0:readBytes])
+		fmt.Print(writeBuffer.String())
+		_, err = conn.Write(writeBuffer.Bytes())
 		if err != nil {
 			fmt.Println("Closing connection:", err.Error())
 			return
