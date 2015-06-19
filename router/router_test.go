@@ -195,7 +195,7 @@ var _ = Describe("Routing Test", func() {
 					tmpconn.Close()
 				}
 				return err
-			}, 10*time.Second, 1*time.Second).ShouldNot(HaveOccurred())
+			}, 20*time.Second, 1*time.Second).ShouldNot(HaveOccurred())
 
 			conn1, response1 := sendAndReceive(address)
 			conn2, response2 := sendAndReceive(address)
