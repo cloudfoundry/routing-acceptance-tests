@@ -14,14 +14,35 @@ import (
 )
 
 const (
-	CREATE_ACTION         = "create"
-	DELETE_ACTION         = "delete"
-	SCALE_ACTION          = "scale"
-	DEFAULT_DIEGO_API_URL = "http://10.244.16.46:8888"
+	CREATE_ACTION          = "create"
+	DELETE_ACTION          = "delete"
+	SCALE_ACTION           = "scale"
+	DEFAULT_DIEGO_API_URL  = "http://10.244.16.46:8888"
+	DEFAULT_SERVER_ID      = "server-1"
+	DEFAULT_EXTERNAL_PORT  = 64000
+	DEFAULT_CONTAINER_PORT = 5222
 )
 
 var (
 	logger lager.Logger
+)
+
+var serverId = flag.String(
+	"serverId",
+	DEFAULT_SERVER_ID,
+	"ID Of the server being created via Diego",
+)
+
+var externalPort = flag.Int(
+	"externalPort",
+	DEFAULT_EXTERNAL_PORT,
+	"The external port.",
+)
+
+var containerPort = flag.Int(
+	"containerPort",
+	DEFAULT_CONTAINER_PORT,
+	"The container port.",
 )
 
 var diegoAPIURL = flag.String(
@@ -90,8 +111,8 @@ func handleCreate(receptorClient receptor.Client) {
 		return
 	}
 	route := tcpRoute{
-		ExternalPort:  64000,
-		ContainerPort: 5222,
+		ExternalPort:  uint16(*externalPort),
+		ContainerPort: uint16(*containerPort),
 	}
 	routes := []tcpRoute{route}
 	data, err := json.Marshal(routes)
@@ -105,25 +126,55 @@ func handleCreate(receptorClient receptor.Client) {
 		LogGuid:     "log-guid",
 		Domain:      "ge",
 		Instances:   1,
+		Setup: &models.SerialAction{
+			Actions: []models.Action{
+				&models.RunAction{
+					Path: "sh",
+					Args: []string{
+						"-c",
+						"curl https://s3.amazonaws.com/router-release-blobs/tcp-sample-receiver.linux -o /tmp/tcp-sample-receiver && chmod +x /tmp/tcp-sample-receiver",
+					},
+				},
+			},
+		},
 		Action: &models.ParallelAction{
 			Actions: []models.Action{
 				&models.RunAction{
 					Path: "sh",
 					Args: []string{
 						"-c",
-						"nc -l -k 5222 > /tmp/output",
+						fmt.Sprintf("/tmp/tcp-sample-receiver -address 0.0.0.0:%d -serverId %s", *containerPort, *serverId),
 					},
 				},
 			},
 		},
-		Monitor:      &models.RunAction{Path: "true"},
+		Monitor: &models.RunAction{Path: "sh",
+			Args: []string{
+				"-c",
+				fmt.Sprintf("nc -z 0.0.0.0 %d", *containerPort),
+			}},
 		StartTimeout: 60,
 		RootFS:       "preloaded:cflinuxfs2",
 		MemoryMB:     128,
 		DiskMB:       128,
-		Ports:        []uint16{5222},
+		Ports:        []uint16{uint16(*containerPort)},
 		Routes: receptor.RoutingInfo{
 			"tcp-router": &routingInfo,
+		},
+		EgressRules: []models.SecurityGroupRule{
+			{
+				Protocol:     models.TCPProtocol,
+				Destinations: []string{"9.0.0.0-89.255.255.255", "71.0.0.0-73.0.0.0"},
+				Ports:        []uint16{80, 443},
+			},
+			{
+				Protocol:     models.UDPProtocol,
+				Destinations: []string{"0.0.0.0/0"},
+				PortRange: &models.PortRange{
+					Start: 53,
+					End:   53,
+				},
+			},
 		},
 	}
 	err = receptorClient.CreateDesiredLRP(lrp)
