@@ -126,29 +126,34 @@ func handleCreate(receptorClient receptor.Client) {
 		LogGuid:     "log-guid",
 		Domain:      "ge",
 		Instances:   1,
-		Setup: &models.SerialAction{
-			Actions: []models.Action{
-				&models.RunAction{
-					Path: "sh",
-					Args: []string{
-						"-c",
-						"curl https://s3.amazonaws.com/router-release-blobs/tcp-sample-receiver.linux -o /tmp/tcp-sample-receiver && chmod +x /tmp/tcp-sample-receiver",
-					},
-				},
-			},
-		},
+		// Setup: &models.SerialAction{
+		// 	Actions: []models.Action{
+		// 		&models.RunAction{
+		// 			Path: "sh",
+		// 			User: "vcap",
+		// 			Args: []string{
+		// 				"-c",
+		// 				"curl https://s3.amazonaws.com/router-release-blobs/tcp-sample-receiver.linux -o /tmp/tcp-sample-receiver && chmod +x /tmp/tcp-sample-receiver",
+		// 			},
+		// 		},
+		// 	},
+		// },
 		Action: &models.ParallelAction{
 			Actions: []models.Action{
 				&models.RunAction{
 					Path: "sh",
+					User: "vcap",
 					Args: []string{
 						"-c",
-						fmt.Sprintf("/tmp/tcp-sample-receiver -address 0.0.0.0:%d -serverId %s", *containerPort, *serverId),
+						//fmt.Sprintf("/tmp/tcp-sample-receiver -address 0.0.0.0:%d -serverId %s", *containerPort, *serverId),
+						fmt.Sprintf("nc -l -k %d > /tmp/output", *containerPort),
 					},
 				},
 			},
 		},
-		Monitor: &models.RunAction{Path: "sh",
+		Monitor: &models.RunAction{
+			Path: "sh",
+			User: "vcap",
 			Args: []string{
 				"-c",
 				fmt.Sprintf("nc -z 0.0.0.0 %d", *containerPort),
@@ -164,7 +169,7 @@ func handleCreate(receptorClient receptor.Client) {
 		EgressRules: []models.SecurityGroupRule{
 			{
 				Protocol:     models.TCPProtocol,
-				Destinations: []string{"9.0.0.0-89.255.255.255", "71.0.0.0-73.0.0.0"},
+				Destinations: []string{"0.0.0.0-255.255.255.255"},
 				Ports:        []uint16{80, 443},
 			},
 			{
