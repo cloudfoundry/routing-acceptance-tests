@@ -17,7 +17,7 @@ const (
 	CREATE_ACTION          = "create"
 	DELETE_ACTION          = "delete"
 	SCALE_ACTION           = "scale"
-	DEFAULT_DIEGO_API_URL  = "http://10.244.16.46:8888"
+	DEFAULT_DIEGO_API_URL  = "http://10.244.16.6:8888"
 	DEFAULT_SERVER_ID      = "server-1"
 	DEFAULT_EXTERNAL_PORT  = 64000
 	DEFAULT_CONTAINER_PORT = 5222
@@ -68,12 +68,6 @@ var numberOfInstances = flag.Int(
 	1,
 	"The desired number of instances.",
 )
-
-// ha proxy configuration
-// listen cf-summit-proxy
-//     mode tcp
-//     bind :3456
-//     server cellz10 10.244.16.10:61001
 
 type tcpRoute struct {
 	ExternalPort  uint16 `json:"external_port"`
@@ -126,18 +120,18 @@ func handleCreate(receptorClient receptor.Client) {
 		LogGuid:     "log-guid",
 		Domain:      "ge",
 		Instances:   1,
-		// Setup: &models.SerialAction{
-		// 	Actions: []models.Action{
-		// 		&models.RunAction{
-		// 			Path: "sh",
-		// 			User: "vcap",
-		// 			Args: []string{
-		// 				"-c",
-		// 				"curl https://s3.amazonaws.com/router-release-blobs/tcp-sample-receiver.linux -o /tmp/tcp-sample-receiver && chmod +x /tmp/tcp-sample-receiver",
-		// 			},
-		// 		},
-		// 	},
-		// },
+		Setup: &models.SerialAction{
+			Actions: []models.Action{
+				&models.RunAction{
+					Path: "sh",
+					User: "vcap",
+					Args: []string{
+						"-c",
+						"curl https://s3.amazonaws.com/router-release-blobs/tcp-sample-receiver.linux -o /tmp/tcp-sample-receiver && chmod +x /tmp/tcp-sample-receiver",
+					},
+				},
+			},
+		},
 		Action: &models.ParallelAction{
 			Actions: []models.Action{
 				&models.RunAction{
@@ -145,8 +139,8 @@ func handleCreate(receptorClient receptor.Client) {
 					User: "vcap",
 					Args: []string{
 						"-c",
-						//fmt.Sprintf("/tmp/tcp-sample-receiver -address 0.0.0.0:%d -serverId %s", *containerPort, *serverId),
-						fmt.Sprintf("nc -l -k %d > /tmp/output", *containerPort),
+						fmt.Sprintf("/tmp/tcp-sample-receiver -address 0.0.0.0:%d -serverId %s", *containerPort, *serverId),
+						// fmt.Sprintf("nc -l -k %d > /tmp/output", *containerPort),
 					},
 				},
 			},

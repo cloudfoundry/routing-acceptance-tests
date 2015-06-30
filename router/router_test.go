@@ -17,6 +17,8 @@ import (
 
 	cf_tcp_router "github.com/cloudfoundry-incubator/cf-tcp-router"
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver/testrunner"
+	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/helpers"
+	"github.com/cloudfoundry-incubator/receptor"
 )
 
 const (
@@ -205,6 +207,37 @@ var _ = Describe("Routing Test", func() {
 			Expect(err).ShouldNot(HaveOccurred())
 			err = conn2.Close()
 			Expect(err).ShouldNot(HaveOccurred())
+		})
+	})
+
+	Describe("LRP with TCP routing requirements is desired", func() {
+		var (
+			receptorClient receptor.Client
+			processGuid    string
+		)
+
+		BeforeEach(func() {
+
+			receptorClient = receptor.NewClient(routerApiConfig.DiegoAPIURL)
+
+			externalPort = 62000 + GinkgoParallelNode()
+			sampleReceiverPort1 = 8000 + GinkgoParallelNode()
+			serverId1 = fmt.Sprintf("serverId-%d", GinkgoParallelNode())
+
+			lrp := helpers.CreateDesiredLRP(logger, uint16(externalPort), uint16(sampleReceiverPort1), serverId1)
+
+			err := receptorClient.CreateDesiredLRP(lrp)
+			Expect(err).ShouldNot(HaveOccurred())
+			processGuid = lrp.ProcessGuid
+		})
+
+		AfterEach(func() {
+			err := receptorClient.DeleteDesiredLRP(processGuid)
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		It("receives TCP traffic on desired external port", func() {
+			verifyConnection(externalPort, serverId1)
 		})
 	})
 })

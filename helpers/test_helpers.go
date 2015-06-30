@@ -6,9 +6,14 @@ import (
 )
 
 type RouterApiConfig struct {
-	Address string `json:"address"`
-	Port    uint16 `json:"port"`
+	Address     string `json:"address"`
+	Port        uint16 `json:"port"`
+	DiegoAPIURL string `json:"diego_api_url,omitempty"`
 }
+
+const (
+	DEFAULT_DIEGO_API_URL = "http://receptor.service.consul:8888"
+)
 
 func LoadConfig() RouterApiConfig {
 
@@ -22,6 +27,9 @@ func LoadConfig() RouterApiConfig {
 		panic("missing configuration 'port'")
 	}
 
+	if loadedConfig.DiegoAPIURL == "" {
+		loadedConfig.DiegoAPIURL = DEFAULT_DIEGO_API_URL
+	}
 	return loadedConfig
 }
 
