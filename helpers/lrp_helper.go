@@ -10,7 +10,10 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-func CreateDesiredLRP(logger lager.Logger, externalPort, containerPort uint16, serverId string) receptor.DesiredLRPCreateRequest {
+func CreateDesiredLRP(
+	logger lager.Logger, externalPort,
+	containerPort uint16, serverId string,
+	instances int) receptor.DesiredLRPCreateRequest {
 	newProcessGuid, err := uuid.NewV4()
 	if err != nil {
 		logger.Error("failed-generate-guid", err)
@@ -25,7 +28,7 @@ func CreateDesiredLRP(logger lager.Logger, externalPort, containerPort uint16, s
 		ProcessGuid: newProcessGuid.String(),
 		LogGuid:     "log-guid",
 		Domain:      "tcp-routing-domain",
-		Instances:   1,
+		Instances:   instances,
 		Setup: &models.SerialAction{
 			Actions: []models.Action{
 				&models.RunAction{
@@ -80,4 +83,19 @@ func CreateDesiredLRP(logger lager.Logger, externalPort, containerPort uint16, s
 		},
 	}
 	return lrp
+}
+
+func UpdateDesiredLRP(
+	externalPort, containerPort uint16,
+	instances int) receptor.DesiredLRPUpdateRequest {
+	route := tcp_routes.TCPRoute{
+		ExternalPort:  externalPort,
+		ContainerPort: containerPort,
+	}
+	routes := tcp_routes.TCPRoutes{route}
+	updatePayload := receptor.DesiredLRPUpdateRequest{
+		Instances: &instances,
+		Routes:    routes.RoutingInfo(),
+	}
+	return updatePayload
 }

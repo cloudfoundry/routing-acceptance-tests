@@ -224,7 +224,8 @@ var _ = Describe("Routing Test", func() {
 			sampleReceiverPort1 = 8000 + GinkgoParallelNode()
 			serverId1 = fmt.Sprintf("serverId-%d", GinkgoParallelNode())
 
-			lrp := helpers.CreateDesiredLRP(logger, uint16(externalPort), uint16(sampleReceiverPort1), serverId1)
+			lrp := helpers.CreateDesiredLRP(logger,
+				uint16(externalPort), uint16(sampleReceiverPort1), serverId1, 1)
 
 			err := receptorClient.CreateDesiredLRP(lrp)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -237,6 +238,14 @@ var _ = Describe("Routing Test", func() {
 		})
 
 		It("receives TCP traffic on desired external port", func() {
+			verifyConnection(externalPort, serverId1)
+
+			By("updating LRP with new external port it receives traffic on new external port")
+			externalPort = 63000 + GinkgoParallelNode()
+			updatedLrp := helpers.UpdateDesiredLRP(uint16(externalPort),
+				uint16(sampleReceiverPort1), 1)
+			err := receptorClient.UpdateDesiredLRP(processGuid, updatedLrp)
+			Expect(err).ShouldNot(HaveOccurred())
 			verifyConnection(externalPort, serverId1)
 		})
 	})

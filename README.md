@@ -19,7 +19,8 @@ cd ~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-tcp-r
 cat > router_config.json <<EOF
 {
   "address": "10.244.8.2",
-    "port": 9999
+  "port": 9999,
+  "diego_api_url": "http://10.244.16.6:8888"
 }
 EOF
 export ROUTER_API_CONFIG=$PWD/router_config.json
