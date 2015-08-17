@@ -1,4 +1,4 @@
-FROM cloudfoundry/trusty64
+FROM busybox:ubuntu-14.04
 RUN mkdir -p /run
 ADD https://s3.amazonaws.com/router-release-blobs/tcp-sample-receiver.linux /run/tcp-sample-receiver
 RUN chmod 755 /run/tcp-sample-receiver
