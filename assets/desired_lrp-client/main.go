@@ -17,7 +17,7 @@ const (
 	CREATE_ACTION          = "create"
 	DELETE_ACTION          = "delete"
 	SCALE_ACTION           = "scale"
-	DEFAULT_DIEGO_API_URL  = "http://10.244.16.6:8888"
+	DEFAULT_DIEGO_API_URL  = "http://10.244.16.6:8887"
 	DEFAULT_SERVER_ID      = "server-1"
 	DEFAULT_EXTERNAL_PORT  = 64000
 	DEFAULT_CONTAINER_PORT = 5222

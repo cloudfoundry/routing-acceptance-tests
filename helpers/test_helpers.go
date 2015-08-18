@@ -12,7 +12,7 @@ type RouterApiConfig struct {
 }
 
 const (
-	DEFAULT_DIEGO_API_URL = "http://receptor.service.consul:8888"
+	DEFAULT_DIEGO_API_URL = "http://receptor.service.cf.internal:8887"
 )
 
 func LoadConfig() RouterApiConfig {
