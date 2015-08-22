@@ -19,6 +19,7 @@ import (
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver/testrunner"
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/helpers"
 	"github.com/cloudfoundry-incubator/receptor"
+	"github.com/cloudfoundry-incubator/tcp-emitter/tcp_routes"
 )
 
 const (
@@ -28,7 +29,8 @@ const (
 
 var _ = Describe("Routing Test", func() {
 	var (
-		externalPort        int
+		externalPort1       int
+		externalPort2       int
 		sampleReceiverPort1 int
 		sampleReceiverPort2 int
 		serverId1           string
@@ -130,7 +132,7 @@ var _ = Describe("Routing Test", func() {
 
 	Describe("A sample receiver running as a separate process", func() {
 		BeforeEach(func() {
-			externalPort = 60000 + GinkgoParallelNode()
+			externalPort1 = 60000 + GinkgoParallelNode()
 			sampleReceiverPort1 = 9000 + GinkgoParallelNode()
 			sampleReceiverPort2 = 9500 + GinkgoParallelNode()
 			serverId1 = "serverId1"
@@ -146,17 +148,16 @@ var _ = Describe("Routing Test", func() {
 		})
 
 		It("routes traffic to sample receiver", func() {
-			configureMapping(externalPort, sampleReceiverPort1)
-			verifyConnection(externalPort, serverId1)
+			configureMapping(externalPort1, sampleReceiverPort1)
+			verifyConnection(externalPort1, serverId1)
 
 			By("altering the mapping it routes to new backend")
-			configureMapping(externalPort, sampleReceiverPort2)
-			verifyConnection(externalPort, serverId2)
+			configureMapping(externalPort1, sampleReceiverPort2)
+			verifyConnection(externalPort1, serverId2)
 		})
 	})
 
 	Describe("Multiple sample receivers running as a separate process and mapped to same external port", func() {
-
 		sendAndReceive := func(address string) (net.Conn, string) {
 			conn, err := net.DialTimeout(CONN_TYPE, address, DEFAULT_CONNECT_TIMEOUT)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -173,7 +174,7 @@ var _ = Describe("Routing Test", func() {
 		}
 
 		BeforeEach(func() {
-			externalPort = 61000 + GinkgoParallelNode()
+			externalPort1 = 61000 + GinkgoParallelNode()
 			sampleReceiverPort1 = 7000 + GinkgoParallelNode()
 			sampleReceiverPort2 = 7500 + GinkgoParallelNode()
 			serverId1 = "serverId3"
@@ -189,8 +190,8 @@ var _ = Describe("Routing Test", func() {
 		})
 
 		It("load balances the connections", func() {
-			configureMapping(externalPort, sampleReceiverPort1, sampleReceiverPort2)
-			address := fmt.Sprintf("%s:%d", routerApiConfig.Address, externalPort)
+			configureMapping(externalPort1, sampleReceiverPort1, sampleReceiverPort2)
+			address := fmt.Sprintf("%s:%d", routerApiConfig.Address, externalPort1)
 			Eventually(func() error {
 				tmpconn, err := net.Dial(CONN_TYPE, address)
 				if err == nil {
@@ -210,6 +211,63 @@ var _ = Describe("Routing Test", func() {
 		})
 	})
 
+	Describe("A single sample receiver running as a separate process and mapped to multiple external ports", func() {
+		var (
+			receptorClient receptor.Client
+			processGuid    string
+		)
+
+		createDesiredLRPTwoExternalPorts := func(
+			externalPort1,
+			externalPort2,
+			ContainerPort uint16,
+			serverId string) receptor.DesiredLRPCreateRequest {
+			lrp := helpers.CreateDesiredLRP(logger,
+				uint16(externalPort1), uint16(sampleReceiverPort1), serverId1, 1)
+
+			route1 := tcp_routes.TCPRoute{
+				ExternalPort:  uint16(externalPort1),
+				ContainerPort: uint16(sampleReceiverPort1),
+			}
+			route2 := tcp_routes.TCPRoute{
+				ExternalPort:  uint16(externalPort2),
+				ContainerPort: uint16(sampleReceiverPort1),
+			}
+			routes := tcp_routes.TCPRoutes{route1, route2}
+			lrp.Routes = routes.RoutingInfo()
+			return lrp
+		}
+
+		BeforeEach(func() {
+			receptorClient = receptor.NewClient(routerApiConfig.DiegoAPIURL)
+			externalPort1 = 34500 + GinkgoParallelNode()
+			externalPort2 = 12300 + GinkgoParallelNode()
+
+			sampleReceiverPort1 = 7000 + GinkgoParallelNode()
+			serverId1 = "serverId6"
+
+			lrp := createDesiredLRPTwoExternalPorts(
+				uint16(externalPort1),
+				uint16(externalPort2),
+				uint16(sampleReceiverPort1),
+				serverId1,
+			)
+			err := receptorClient.CreateDesiredLRP(lrp)
+			Expect(err).ShouldNot(HaveOccurred())
+			processGuid = lrp.ProcessGuid
+		})
+
+		AfterEach(func() {
+			err := receptorClient.DeleteDesiredLRP(processGuid)
+			Expect(err).ShouldNot(HaveOccurred())
+		})
+
+		It("sends traffic on the different external ports to the same container port", func() {
+			verifyConnection(externalPort1, serverId1)
+			verifyConnection(externalPort2, serverId1)
+		})
+	})
+
 	Describe("LRP with TCP routing requirements is desired", func() {
 		var (
 			receptorClient receptor.Client
@@ -220,12 +278,12 @@ var _ = Describe("Routing Test", func() {
 
 			receptorClient = receptor.NewClient(routerApiConfig.DiegoAPIURL)
 
-			externalPort = 62000 + GinkgoParallelNode()
+			externalPort1 = 62000 + GinkgoParallelNode()
 			sampleReceiverPort1 = 8000 + GinkgoParallelNode()
 			serverId1 = fmt.Sprintf("serverId-%d", GinkgoParallelNode())
 
 			lrp := helpers.CreateDesiredLRP(logger,
-				uint16(externalPort), uint16(sampleReceiverPort1), serverId1, 1)
+				uint16(externalPort1), uint16(sampleReceiverPort1), serverId1, 1)
 
 			err := receptorClient.CreateDesiredLRP(lrp)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -238,15 +296,15 @@ var _ = Describe("Routing Test", func() {
 		})
 
 		It("receives TCP traffic on desired external port", func() {
-			verifyConnection(externalPort, serverId1)
+			verifyConnection(externalPort1, serverId1)
 
 			By("updating LRP with new external port it receives traffic on new external port")
-			externalPort = 63000 + GinkgoParallelNode()
-			updatedLrp := helpers.UpdateDesiredLRP(uint16(externalPort),
+			externalPort1 = 63000 + GinkgoParallelNode()
+			updatedLrp := helpers.UpdateDesiredLRP(uint16(externalPort1),
 				uint16(sampleReceiverPort1), 1)
 			err := receptorClient.UpdateDesiredLRP(processGuid, updatedLrp)
 			Expect(err).ShouldNot(HaveOccurred())
-			verifyConnection(externalPort, serverId1)
+			verifyConnection(externalPort1, serverId1)
 		})
 	})
 })
