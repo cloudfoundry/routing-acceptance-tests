@@ -211,7 +211,7 @@ var _ = Describe("Routing Test", func() {
 		})
 	})
 
-	Describe("A single sample receiver running as a separate process and mapped to multiple external ports", func() {
+	Describe("LRP mapped to multiple external ports", func() {
 		var (
 			receptorClient receptor.Client
 			processGuid    string
