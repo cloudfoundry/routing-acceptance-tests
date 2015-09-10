@@ -6,9 +6,9 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/cloudfoundry-incubator/bbs"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/cf-lager"
-	"github.com/cloudfoundry-incubator/receptor"
-	"github.com/cloudfoundry-incubator/runtime-schema/models"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
@@ -17,7 +17,7 @@ const (
 	CREATE_ACTION          = "create"
 	DELETE_ACTION          = "delete"
 	SCALE_ACTION           = "scale"
-	DEFAULT_DIEGO_API_URL  = "http://10.244.16.6:8887"
+	DEFAULT_BBS_ADDRESS    = "http://10.244.16.130:8889"
 	DEFAULT_SERVER_ID      = "server-1"
 	DEFAULT_EXTERNAL_PORT  = 64000
 	DEFAULT_CONTAINER_PORT = 5222
@@ -45,9 +45,9 @@ var containerPort = flag.Int(
 	"The container port.",
 )
 
-var diegoAPIURL = flag.String(
-	"diegoAPIURL",
-	DEFAULT_DIEGO_API_URL,
+var bbsAddress = flag.String(
+	"bbsAddress",
+	DEFAULT_BBS_ADDRESS,
 	"URL of diego API",
 )
 
@@ -84,21 +84,21 @@ func main() {
 		logger.Fatal("action-required", errors.New("Missing mandatory action parameter"))
 	}
 
-	receptorClient := receptor.NewClient(*diegoAPIURL)
+	bbsClient := bbs.NewClient(*bbsAddress)
 
 	switch *action {
 	case CREATE_ACTION:
-		handleCreate(receptorClient)
+		handleCreate(bbsClient)
 	case DELETE_ACTION:
-		handleDelete(receptorClient)
+		handleDelete(bbsClient)
 	case SCALE_ACTION:
-		handleScale(receptorClient)
+		handleScale(bbsClient)
 	default:
 		logger.Fatal("unknown-parameter", errors.New(fmt.Sprintf("The command [%s] is not valid", *action)))
 	}
 }
 
-func handleCreate(receptorClient receptor.Client) {
+func handleCreate(bbsClient bbs.Client) {
 	newProcessGuid, err := uuid.NewV4()
 	if err != nil {
 		logger.Error("failed-generate-guid", err)
@@ -115,59 +115,58 @@ func handleCreate(receptorClient receptor.Client) {
 		return
 	}
 	routingInfo := json.RawMessage(data)
-	lrp := receptor.DesiredLRPCreateRequest{
+	lrp := models.DesiredLRP{
 		ProcessGuid: newProcessGuid.String(),
 		LogGuid:     "log-guid",
 		Domain:      "ge",
 		Instances:   1,
-		Setup: &models.SerialAction{
-			Actions: []models.Action{
-				&models.RunAction{
-					Path: "sh",
-					User: "vcap",
-					Args: []string{
-						"-c",
-						"curl https://s3.amazonaws.com/router-release-blobs/tcp-sample-receiver.linux -o /tmp/tcp-sample-receiver && chmod +x /tmp/tcp-sample-receiver",
-					},
+		Setup: &models.Action{
+			RunAction: &models.RunAction{
+				Path: "sh",
+				User: "vcap",
+				Args: []string{
+					"-c",
+					"curl https://s3.amazonaws.com/router-release-blobs/tcp-sample-receiver.linux -o /tmp/tcp-sample-receiver && chmod +x /tmp/tcp-sample-receiver",
 				},
 			},
 		},
-		Action: &models.ParallelAction{
-			Actions: []models.Action{
-				&models.RunAction{
-					Path: "sh",
-					User: "vcap",
-					Args: []string{
-						"-c",
-						fmt.Sprintf("/tmp/tcp-sample-receiver -address 0.0.0.0:%d -serverId %s", *containerPort, *serverId),
-						// fmt.Sprintf("nc -l -k %d > /tmp/output", *containerPort),
-					},
+		Action: &models.Action{
+			RunAction: &models.RunAction{
+				Path: "sh",
+				User: "vcap",
+				Args: []string{
+					"-c",
+					fmt.Sprintf("/tmp/tcp-sample-receiver -address 0.0.0.0:%d -serverId %s", *containerPort, *serverId),
+					// fmt.Sprintf("nc -l -k %d > /tmp/output", *containerPort),
 				},
 			},
 		},
-		Monitor: &models.RunAction{
-			Path: "sh",
-			User: "vcap",
-			Args: []string{
-				"-c",
-				fmt.Sprintf("nc -z 0.0.0.0 %d", *containerPort),
-			}},
+		Monitor: &models.Action{
+			RunAction: &models.RunAction{
+				Path: "sh",
+				User: "vcap",
+				Args: []string{
+					"-c",
+					fmt.Sprintf("nc -z 0.0.0.0 %d", *containerPort),
+				},
+			},
+		},
 		StartTimeout: 60,
-		RootFS:       "preloaded:cflinuxfs2",
-		MemoryMB:     128,
-		DiskMB:       128,
-		Ports:        []uint16{uint16(*containerPort)},
-		Routes: receptor.RoutingInfo{
+		RootFs:       "preloaded:cflinuxfs2",
+		MemoryMb:     128,
+		DiskMb:       128,
+		Ports:        []uint32{uint32(*containerPort)},
+		Routes: &models.Routes{
 			"tcp-router": &routingInfo,
 		},
-		EgressRules: []models.SecurityGroupRule{
-			{
-				Protocol:     models.TCPProtocol,
+		EgressRules: []*models.SecurityGroupRule{
+			&models.SecurityGroupRule{
+				Protocol:     "tcp",
 				Destinations: []string{"0.0.0.0-255.255.255.255"},
-				Ports:        []uint16{80, 443},
+				Ports:        []uint32{80, 443},
 			},
-			{
-				Protocol:     models.UDPProtocol,
+			&models.SecurityGroupRule{
+				Protocol:     "udp",
 				Destinations: []string{"0.0.0.0/0"},
 				PortRange: &models.PortRange{
 					Start: 53,
@@ -176,7 +175,7 @@ func handleCreate(receptorClient receptor.Client) {
 			},
 		},
 	}
-	err = receptorClient.CreateDesiredLRP(lrp)
+	err = bbsClient.DesireLRP(&lrp)
 	if err != nil {
 		logger.Error("failed-create", err, lager.Data{"LRP": lrp})
 	} else {
@@ -184,12 +183,12 @@ func handleCreate(receptorClient receptor.Client) {
 	}
 }
 
-func handleDelete(receptorClient receptor.Client) {
+func handleDelete(bbsClient bbs.Client) {
 	if *processGuid == "" {
 		logger.Fatal("missing-processGuid", errors.New("Missing mandatory processGuid parameter for delete action"))
 	}
 
-	err := receptorClient.DeleteDesiredLRP(*processGuid)
+	err := bbsClient.RemoveDesiredLRP(*processGuid)
 	if err != nil {
 		logger.Error("failed-to-delete", err, lager.Data{"process-guid": *processGuid})
 		return
@@ -197,15 +196,16 @@ func handleDelete(receptorClient receptor.Client) {
 	fmt.Printf("Desired LRP successfully deleted for process guid %s\n", *processGuid)
 }
 
-func handleScale(receptorClient receptor.Client) {
+func handleScale(bbsClient bbs.Client) {
 	if *processGuid == "" {
 		logger.Fatal("missing-processGuid", errors.New("Missing mandatory processGuid parameter for scale action"))
 	}
 
-	updatePayload := receptor.DesiredLRPUpdateRequest{
-		Instances: numberOfInstances,
+	instances := int32(*numberOfInstances)
+	updatePayload := models.DesiredLRPUpdate{
+		Instances: &instances,
 	}
-	err := receptorClient.UpdateDesiredLRP(*processGuid, updatePayload)
+	err := bbsClient.UpdateDesiredLRP(*processGuid, &updatePayload)
 	if err != nil {
 		logger.Error("failed-to-scale", err, lager.Data{"process-guid": *processGuid, "update-request": updatePayload})
 		return

@@ -6,13 +6,13 @@ import (
 )
 
 type RouterApiConfig struct {
-	Address     string `json:"address"`
-	Port        uint16 `json:"port"`
-	DiegoAPIURL string `json:"diego_api_url,omitempty"`
+	Address    string `json:"address"`
+	Port       uint16 `json:"port"`
+	BBSAddress string `json:"bbs_api_url,omitempty"`
 }
 
 const (
-	DEFAULT_DIEGO_API_URL = "http://receptor.service.cf.internal:8887"
+	DEFAULT_BBS_API_URL = "http://bbs.service.cf.internal:8889"
 )
 
 func LoadConfig() RouterApiConfig {
@@ -27,8 +27,8 @@ func LoadConfig() RouterApiConfig {
 		panic("missing configuration 'port'")
 	}
 
-	if loadedConfig.DiegoAPIURL == "" {
-		loadedConfig.DiegoAPIURL = DEFAULT_DIEGO_API_URL
+	if loadedConfig.BBSAddress == "" {
+		loadedConfig.BBSAddress = DEFAULT_BBS_API_URL
 	}
 	return loadedConfig
 }

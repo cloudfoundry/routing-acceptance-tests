@@ -15,10 +15,11 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/ginkgomon"
 
+	"github.com/cloudfoundry-incubator/bbs"
+	"github.com/cloudfoundry-incubator/bbs/models"
 	cf_tcp_router "github.com/cloudfoundry-incubator/cf-tcp-router"
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver/testrunner"
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/helpers"
-	"github.com/cloudfoundry-incubator/receptor"
 	"github.com/cloudfoundry-incubator/tcp-emitter/tcp_routes"
 )
 
@@ -213,25 +214,25 @@ var _ = Describe("Routing Test", func() {
 
 	Describe("LRP mapped to multiple external ports", func() {
 		var (
-			receptorClient receptor.Client
-			processGuid    string
+			bbsClient   bbs.Client
+			processGuid string
 		)
 
 		createDesiredLRPTwoExternalPorts := func(
 			externalPort1,
 			externalPort2,
-			ContainerPort uint16,
-			serverId string) receptor.DesiredLRPCreateRequest {
+			sampleReceiverPort1 uint32,
+			serverId string) *models.DesiredLRP {
 			lrp := helpers.CreateDesiredLRP(logger,
-				uint16(externalPort1), uint16(sampleReceiverPort1), serverId1, 1)
+				externalPort1, sampleReceiverPort1, serverId1, 1)
 
 			route1 := tcp_routes.TCPRoute{
-				ExternalPort:  uint16(externalPort1),
-				ContainerPort: uint16(sampleReceiverPort1),
+				ExternalPort:  externalPort1,
+				ContainerPort: sampleReceiverPort1,
 			}
 			route2 := tcp_routes.TCPRoute{
-				ExternalPort:  uint16(externalPort2),
-				ContainerPort: uint16(sampleReceiverPort1),
+				ExternalPort:  externalPort2,
+				ContainerPort: sampleReceiverPort1,
 			}
 			routes := tcp_routes.TCPRoutes{route1, route2}
 			lrp.Routes = routes.RoutingInfo()
@@ -239,7 +240,7 @@ var _ = Describe("Routing Test", func() {
 		}
 
 		BeforeEach(func() {
-			receptorClient = receptor.NewClient(routerApiConfig.DiegoAPIURL)
+			bbsClient = bbs.NewClient(routerApiConfig.BBSAddress)
 			externalPort1 = 34500 + GinkgoParallelNode()
 			externalPort2 = 12300 + GinkgoParallelNode()
 
@@ -247,18 +248,18 @@ var _ = Describe("Routing Test", func() {
 			serverId1 = "serverId6"
 
 			lrp := createDesiredLRPTwoExternalPorts(
-				uint16(externalPort1),
-				uint16(externalPort2),
-				uint16(sampleReceiverPort1),
+				uint32(externalPort1),
+				uint32(externalPort2),
+				uint32(sampleReceiverPort1),
 				serverId1,
 			)
-			err := receptorClient.CreateDesiredLRP(lrp)
+			err := bbsClient.DesireLRP(lrp)
 			Expect(err).ShouldNot(HaveOccurred())
 			processGuid = lrp.ProcessGuid
 		})
 
 		AfterEach(func() {
-			err := receptorClient.DeleteDesiredLRP(processGuid)
+			err := bbsClient.RemoveDesiredLRP(processGuid)
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
@@ -270,28 +271,28 @@ var _ = Describe("Routing Test", func() {
 
 	Describe("LRP with TCP routing requirements is desired", func() {
 		var (
-			receptorClient receptor.Client
-			processGuid    string
+			bbsClient   bbs.Client
+			processGuid string
 		)
 
 		BeforeEach(func() {
 
-			receptorClient = receptor.NewClient(routerApiConfig.DiegoAPIURL)
+			bbsClient = bbs.NewClient(routerApiConfig.BBSAddress)
 
 			externalPort1 = 62000 + GinkgoParallelNode()
 			sampleReceiverPort1 = 8000 + GinkgoParallelNode()
 			serverId1 = fmt.Sprintf("serverId-%d", GinkgoParallelNode())
 
 			lrp := helpers.CreateDesiredLRP(logger,
-				uint16(externalPort1), uint16(sampleReceiverPort1), serverId1, 1)
+				uint32(externalPort1), uint32(sampleReceiverPort1), serverId1, 1)
 
-			err := receptorClient.CreateDesiredLRP(lrp)
+			err := bbsClient.DesireLRP(lrp)
 			Expect(err).ShouldNot(HaveOccurred())
 			processGuid = lrp.ProcessGuid
 		})
 
 		AfterEach(func() {
-			err := receptorClient.DeleteDesiredLRP(processGuid)
+			err := bbsClient.RemoveDesiredLRP(processGuid)
 			Expect(err).ShouldNot(HaveOccurred())
 		})
 
@@ -300,9 +301,9 @@ var _ = Describe("Routing Test", func() {
 
 			By("updating LRP with new external port it receives traffic on new external port")
 			externalPort1 = 63000 + GinkgoParallelNode()
-			updatedLrp := helpers.UpdateDesiredLRP(uint16(externalPort1),
-				uint16(sampleReceiverPort1), 1)
-			err := receptorClient.UpdateDesiredLRP(processGuid, updatedLrp)
+			updatedLrp := helpers.UpdateDesiredLRP(uint32(externalPort1),
+				uint32(sampleReceiverPort1), 1)
+			err := bbsClient.UpdateDesiredLRP(processGuid, updatedLrp)
 			Expect(err).ShouldNot(HaveOccurred())
 			verifyConnection(externalPort1, serverId1)
 		})

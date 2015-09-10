@@ -20,7 +20,7 @@ cat > router_config.json <<EOF
 {
   "address": "10.244.8.2",
   "port": 9999,
-  "diego_api_url": "http://10.244.16.6:8887"
+  "bbs_api_url": "http://10.244.16.130:8889"
 }
 EOF
 export ROUTER_API_CONFIG=$PWD/router_config.json
