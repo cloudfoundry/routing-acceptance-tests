@@ -15,8 +15,8 @@ import (
 
 const (
 	CREATE_ACTION          = "create"
+	UPDATE_ACTION          = "update"
 	DELETE_ACTION          = "delete"
-	SCALE_ACTION           = "scale"
 	DEFAULT_BBS_ADDRESS    = "http://10.244.16.130:8889"
 	DEFAULT_SERVER_ID      = "server-1"
 	DEFAULT_EXTERNAL_PORT  = 64000
@@ -35,7 +35,7 @@ var serverId = flag.String(
 
 var externalPort = flag.Int(
 	"externalPort",
-	DEFAULT_EXTERNAL_PORT,
+	0,
 	"The external port.",
 )
 
@@ -65,7 +65,7 @@ var processGuid = flag.String(
 
 var numberOfInstances = flag.Int(
 	"instances",
-	1,
+	-1,
 	"The desired number of instances.",
 )
 
@@ -91,8 +91,8 @@ func main() {
 		handleCreate(bbsClient)
 	case DELETE_ACTION:
 		handleDelete(bbsClient)
-	case SCALE_ACTION:
-		handleScale(bbsClient)
+	case UPDATE_ACTION:
+		handleUpdate(bbsClient)
 	default:
 		logger.Fatal("unknown-parameter", errors.New(fmt.Sprintf("The command [%s] is not valid", *action)))
 	}
@@ -104,8 +104,12 @@ func handleCreate(bbsClient bbs.Client) {
 		logger.Error("failed-generate-guid", err)
 		return
 	}
+	extPort := *externalPort
+	if extPort == 0 {
+		extPort = DEFAULT_EXTERNAL_PORT
+	}
 	route := tcpRoute{
-		ExternalPort:  uint16(*externalPort),
+		ExternalPort:  uint16(extPort),
 		ContainerPort: uint16(*containerPort),
 	}
 	routes := []tcpRoute{route}
@@ -196,19 +200,43 @@ func handleDelete(bbsClient bbs.Client) {
 	fmt.Printf("Desired LRP successfully deleted for process guid %s\n", *processGuid)
 }
 
-func handleScale(bbsClient bbs.Client) {
+func handleUpdate(bbsClient bbs.Client) {
 	if *processGuid == "" {
 		logger.Fatal("missing-processGuid", errors.New("Missing mandatory processGuid parameter for scale action"))
 	}
 
-	instances := int32(*numberOfInstances)
-	updatePayload := models.DesiredLRPUpdate{
-		Instances: &instances,
+	updated := false
+	var updatePayload models.DesiredLRPUpdate
+	if *numberOfInstances >= 0 {
+		instances := int32(*numberOfInstances)
+		updatePayload.Instances = &instances
+		updated = true
 	}
-	err := bbsClient.UpdateDesiredLRP(*processGuid, &updatePayload)
-	if err != nil {
-		logger.Error("failed-to-scale", err, lager.Data{"process-guid": *processGuid, "update-request": updatePayload})
-		return
+
+	if *externalPort > 0 {
+		route := tcpRoute{
+			ExternalPort:  uint16(*externalPort),
+			ContainerPort: uint16(*containerPort),
+		}
+		routes := []tcpRoute{route}
+		data, err := json.Marshal(routes)
+		if err != nil {
+			logger.Error("failed-to-marshal", err)
+			return
+		}
+		routingInfo := json.RawMessage(data)
+		updatePayload.Routes = &models.Routes{
+			"tcp-router": &routingInfo,
+		}
+		updated = true
 	}
-	fmt.Printf("LRP %s scaled to number of instances %d\n", *processGuid, *numberOfInstances)
+
+	if updated {
+		err := bbsClient.UpdateDesiredLRP(*processGuid, &updatePayload)
+		if err != nil {
+			logger.Error("failed-to-scale", err, lager.Data{"process-guid": *processGuid, "update-request": updatePayload})
+			return
+		}
+		fmt.Printf("LRP %s updated \n", *processGuid)
+	}
 }
