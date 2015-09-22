@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/models"
@@ -22,6 +23,14 @@ const (
 	DEFAULT_EXTERNAL_PORT  = 64000
 	DEFAULT_CONTAINER_PORT = 5222
 )
+
+type Config struct {
+	BBSAddress        string `json:"bbs_api_url"`
+	BBSRequireSSL     bool   `json:"bbs_require_ssl"`
+	BBSClientCertFile string `json:"bbs_client_cert,omitempty"`
+	BBSClientKeyFile  string `json:"bbs_client_key,omitempty"`
+	BBSCACertFile     string `json:"bbs_ca_cert,omitempty"`
+}
 
 var (
 	logger lager.Logger
@@ -69,6 +78,12 @@ var numberOfInstances = flag.Int(
 	"The desired number of instances.",
 )
 
+var configFile = flag.String(
+	"config",
+	"config/config.json",
+	"The configuration file for this client.",
+)
+
 type tcpRoute struct {
 	ExternalPort  uint16 `json:"external_port"`
 	ContainerPort uint16 `json:"container_port"`
@@ -84,7 +99,11 @@ func main() {
 		logger.Fatal("action-required", errors.New("Missing mandatory action parameter"))
 	}
 
-	bbsClient := bbs.NewClient(*bbsAddress)
+	config := loadConfig()
+	bbsClient, err := bbs.NewSecureClient(config.BBSAddress, config.BBSCACertFile, config.BBSClientCertFile, config.BBSClientKeyFile)
+	if err != nil {
+		logger.Fatal("fail-to-connect-to-bbs", err)
+	}
 
 	switch *action {
 	case CREATE_ACTION:
@@ -239,4 +258,32 @@ func handleUpdate(bbsClient bbs.Client) {
 		}
 		fmt.Printf("LRP %s updated \n", *processGuid)
 	}
+}
+
+func loadConfig() Config {
+
+	loadedConfig := loadConfigJsonFromPath()
+
+	if loadedConfig.BBSRequireSSL &&
+		(loadedConfig.BBSClientCertFile == "" || loadedConfig.BBSClientKeyFile == "" || loadedConfig.BBSCACertFile == "") {
+		panic("ssl enabled: missing configuration for mutual auth")
+	}
+	return loadedConfig
+}
+
+func loadConfigJsonFromPath() Config {
+	var config Config
+
+	configFile, err := os.Open(*configFile)
+	if err != nil {
+		panic(err)
+	}
+
+	decoder := json.NewDecoder(configFile)
+	err = decoder.Decode(&config)
+	if err != nil {
+		panic(err)
+	}
+
+	return config
 }

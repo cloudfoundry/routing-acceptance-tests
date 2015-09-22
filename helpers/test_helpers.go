@@ -6,9 +6,13 @@ import (
 )
 
 type RouterApiConfig struct {
-	Address    string `json:"address"`
-	Port       uint16 `json:"port"`
-	BBSAddress string `json:"bbs_api_url,omitempty"`
+	Address           string `json:"address"`
+	Port              uint16 `json:"port"`
+	BBSAddress        string `json:"bbs_api_url,omitempty"`
+	BBSClientCertFile string `json:"bbs_client_cert,omitempty"`
+	BBSClientKeyFile  string `json:"bbs_client_key,omitempty"`
+	BBSCACertFile     string `json:"bbs_ca_cert,omitempty"`
+	BBSRequireSSL     bool   `json:"bbs_require_ssl"`
 }
 
 const (
@@ -29,6 +33,11 @@ func LoadConfig() RouterApiConfig {
 
 	if loadedConfig.BBSAddress == "" {
 		loadedConfig.BBSAddress = DEFAULT_BBS_API_URL
+	}
+
+	if loadedConfig.BBSRequireSSL &&
+		(loadedConfig.BBSClientCertFile == "" || loadedConfig.BBSClientKeyFile == "" || loadedConfig.BBSCACertFile == "") {
+		panic("ssl enabled: missing configuration for mutual auth")
 	}
 	return loadedConfig
 }

@@ -1,0 +1,7 @@
+{
+  "bbs_api_url": "https://bbs.service.cf.internal:8889",
+  "bbs_require_ssl": true,
+  "bbs_client_cert": "config/client.crt",
+  "bbs_client_key": "config/client.key",
+  "bbs_ca_cert": "config/ca_cert.crt"
+}
