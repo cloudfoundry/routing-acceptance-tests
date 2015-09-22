@@ -18,6 +18,7 @@ const (
 	CREATE_ACTION          = "create"
 	UPDATE_ACTION          = "update"
 	DELETE_ACTION          = "delete"
+	LIST_ACTION            = "list"
 	DEFAULT_BBS_ADDRESS    = "http://10.244.16.130:8889"
 	DEFAULT_SERVER_ID      = "server-1"
 	DEFAULT_EXTERNAL_PORT  = 64000
@@ -112,6 +113,8 @@ func main() {
 		handleDelete(bbsClient)
 	case UPDATE_ACTION:
 		handleUpdate(bbsClient)
+	case LIST_ACTION:
+		handleList(bbsClient)
 	default:
 		logger.Fatal("unknown-parameter", errors.New(fmt.Sprintf("The command [%s] is not valid", *action)))
 	}
@@ -204,6 +207,51 @@ func handleCreate(bbsClient bbs.Client) {
 	} else {
 		fmt.Printf("Successfully created LRP with process guid %s\n", newProcessGuid)
 	}
+}
+
+func printJson(v interface{}) {
+	bytes, _ := json.Marshal(v)
+	fmt.Println(string(bytes))
+}
+
+type lrp struct {
+	DesiredLRP      *models.DesiredLRP       `json:"desired_lrp"`
+	ActualLRPGroups []*models.ActualLRPGroup `json:"actual_lrps"`
+}
+
+type lrps []lrp
+
+func handleList(bbsClient bbs.Client) {
+	lrps := make(lrps, 0)
+	if *processGuid != "" {
+		desiredLrp, err := bbsClient.DesiredLRPByProcessGuid(*processGuid)
+		if err != nil {
+			logger.Error("failed-to-get-desired", err, lager.Data{"process-guid": *processGuid})
+		}
+		lrps = append(lrps, createLrp(desiredLrp, bbsClient))
+	} else {
+		desiredLrps, err := bbsClient.DesiredLRPs(models.DesiredLRPFilter{})
+		if err != nil {
+			logger.Error("failed-to-get-desired", err, lager.Data{"process-guid": *processGuid})
+		}
+
+		for _, desiredLrp := range desiredLrps {
+			lrps = append(lrps, createLrp(desiredLrp, bbsClient))
+		}
+	}
+	printJson(lrps)
+}
+
+func createLrp(desiredLrp *models.DesiredLRP, bbsClient bbs.Client) lrp {
+	actualLrps, err := bbsClient.ActualLRPGroupsByProcessGuid(desiredLrp.ProcessGuid)
+	if err != nil {
+		logger.Error("failed-to-get-actual", err, lager.Data{"process-guid": processGuid})
+	}
+	lrp := lrp{
+		DesiredLRP:      desiredLrp,
+		ActualLRPGroups: actualLrps,
+	}
+	return lrp
 }
 
 func handleDelete(bbsClient bbs.Client) {
