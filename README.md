@@ -20,11 +20,22 @@ cat > router_config.json <<EOF
 {
   "address": "10.244.8.2",
   "port": 9999,
-  "bbs_api_url": "http://10.244.16.130:8889"
+  "bbs_api_url": "https://bbs.service.cf.internal:8889",
+  "bbs_require_ssl": true,
+  "bbs_client_cert": "/path/to/bbs/client.crt",
+  "bbs_client_key": "/path/to/bbs/client.key",
+  "bbs_ca_cert": "/path/to/bbs/ca_cert.crt"
 }
 EOF
 export ROUTER_API_CONFIG=$PWD/router_config.json
 ```
+BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/desired_lrp_client/config`. Replace `router_config.json` bbs certificate fields with absolute path of certificate files.
+
+Make following entry in `/etc/hosts` file
+```
+10.244.16.130 bbs.service.cf.internal
+```
+Note that IP `10.244.16.130` is IP address of `database_z1/0` job in diego release. If this IP address happens to be different in your diego release then change the entry accordingly.
 
 ### Running the tests
 
