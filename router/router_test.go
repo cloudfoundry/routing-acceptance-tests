@@ -20,7 +20,10 @@ import (
 	cf_tcp_router "github.com/cloudfoundry-incubator/cf-tcp-router"
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver/testrunner"
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/helpers"
+	"github.com/cloudfoundry-incubator/routing-api"
+	"github.com/cloudfoundry-incubator/routing-api/db"
 	"github.com/cloudfoundry-incubator/tcp-emitter/tcp_routes"
+	token_fetcher "github.com/cloudfoundry-incubator/uaa-token-fetcher"
 )
 
 const (
@@ -29,6 +32,7 @@ const (
 )
 
 var _ = Describe("Routing Test", func() {
+
 	var (
 		externalPort1       int
 		externalPort2       int
@@ -37,9 +41,41 @@ var _ = Describe("Routing Test", func() {
 		serverId1           string
 		serverId2           string
 
-		receiver1 ifrit.Process
-		receiver2 ifrit.Process
+		receiver1        ifrit.Process
+		receiver2        ifrit.Process
+		routingApiClient routing_api.Client
 	)
+
+	const (
+		ROUTER_GROUP_1 = "rtr-grp-1"
+	)
+
+	BeforeEach(func() {
+		routingApiClient = routing_api.NewClient(routerApiConfig.RoutingApiUrl)
+		oauth := token_fetcher.OAuthConfig{
+			TokenEndpoint: routerApiConfig.OAuth.TokenEndpoint,
+			ClientName:    routerApiConfig.OAuth.ClientName,
+			ClientSecret:  routerApiConfig.OAuth.ClientSecret,
+			Port:          routerApiConfig.OAuth.Port,
+		}
+		tokenFetcher := token_fetcher.NewTokenFetcher(&oauth)
+		token, err := tokenFetcher.FetchToken()
+		Expect(err).ToNot(HaveOccurred())
+		routingApiClient.SetToken(token.AccessToken)
+	})
+
+	configureRoutingApiMapping := func(externalPort int, backendPorts ...int) {
+
+		tcpRouteMappings := make([]db.TcpRouteMapping, 0)
+
+		for _, backendPort := range backendPorts {
+			tcpMapping := db.NewTcpRouteMapping(ROUTER_GROUP_1, uint16(externalPort), externalIP, uint16(backendPort))
+			tcpRouteMappings = append(tcpRouteMappings, tcpMapping)
+		}
+
+		err := routingApiClient.UpsertTcpRouteMappings(tcpRouteMappings)
+		Expect(err).ToNot(HaveOccurred())
+	}
 
 	configureMapping := func(externalPort int, backendPorts ...int) {
 		backends := cf_tcp_router.BackendHostInfos{}
@@ -132,29 +168,54 @@ var _ = Describe("Routing Test", func() {
 	}
 
 	Describe("A sample receiver running as a separate process", func() {
-		BeforeEach(func() {
-			externalPort1 = 60000 + GinkgoParallelNode()
-			sampleReceiverPort1 = 9000 + GinkgoParallelNode()
-			sampleReceiverPort2 = 9500 + GinkgoParallelNode()
-			serverId1 = "serverId1"
-			serverId2 = "serverId2"
+		Context("using tcp configurer", func() {
+			BeforeEach(func() {
+				externalPort1 = 60000 + GinkgoParallelNode()
+				sampleReceiverPort1 = 9000 + GinkgoParallelNode()
+				sampleReceiverPort2 = 9500 + GinkgoParallelNode()
+				serverId1 = "serverId1"
+				serverId2 = "serverId2"
 
-			receiver1 = spinupTcpReceiver(sampleReceiverPort1, serverId1)
-			receiver2 = spinupTcpReceiver(sampleReceiverPort2, serverId2)
+				receiver1 = spinupTcpReceiver(sampleReceiverPort1, serverId1)
+				receiver2 = spinupTcpReceiver(sampleReceiverPort2, serverId2)
+			})
+
+			AfterEach(func() {
+				tearDownTcpReceiver(receiver1)
+				tearDownTcpReceiver(receiver2)
+			})
+			It("routes traffic to sample receiver", func() {
+				configureMapping(externalPort1, sampleReceiverPort1)
+				verifyConnection(externalPort1, serverId1)
+
+				By("altering the mapping it routes to new backend")
+				configureMapping(externalPort1, sampleReceiverPort2)
+				verifyConnection(externalPort1, serverId2)
+			})
 		})
+		Context("using routing api", func() {
+			BeforeEach(func() {
+				externalPort1 = 60500 + GinkgoParallelNode()
+				sampleReceiverPort1 = 10500 + GinkgoParallelNode()
+				sampleReceiverPort2 = 11000 + GinkgoParallelNode()
+				serverId1 = "serverId-1-routing-api"
+				serverId2 = "serverId-2-routing-api"
 
-		AfterEach(func() {
-			tearDownTcpReceiver(receiver1)
-			tearDownTcpReceiver(receiver2)
-		})
+				receiver1 = spinupTcpReceiver(sampleReceiverPort1, serverId1)
+				receiver2 = spinupTcpReceiver(sampleReceiverPort2, serverId2)
+			})
+			AfterEach(func() {
+				tearDownTcpReceiver(receiver1)
+				tearDownTcpReceiver(receiver2)
+			})
+			It("routes traffic to sample receiver", func() {
+				configureRoutingApiMapping(externalPort1, sampleReceiverPort1)
+				verifyConnection(externalPort1, serverId1)
 
-		It("routes traffic to sample receiver", func() {
-			configureMapping(externalPort1, sampleReceiverPort1)
-			verifyConnection(externalPort1, serverId1)
-
-			By("altering the mapping it routes to new backend")
-			configureMapping(externalPort1, sampleReceiverPort2)
-			verifyConnection(externalPort1, serverId2)
+				By("altering the mapping it routes to new backend")
+				configureRoutingApiMapping(externalPort1, sampleReceiverPort2)
+				verifyConnection(externalPort1, serverId2)
+			})
 		})
 	})
 
@@ -173,43 +234,86 @@ var _ = Describe("Routing Test", func() {
 
 			return conn, string(response[0:count])
 		}
+		Context("using tcp configurer", func() {
+			BeforeEach(func() {
+				externalPort1 = 61000 + GinkgoParallelNode()
+				sampleReceiverPort1 = 7000 + GinkgoParallelNode()
+				sampleReceiverPort2 = 7500 + GinkgoParallelNode()
+				serverId1 = "serverId3"
+				serverId2 = "serverId4"
 
-		BeforeEach(func() {
-			externalPort1 = 61000 + GinkgoParallelNode()
-			sampleReceiverPort1 = 7000 + GinkgoParallelNode()
-			sampleReceiverPort2 = 7500 + GinkgoParallelNode()
-			serverId1 = "serverId3"
-			serverId2 = "serverId4"
+				receiver1 = spinupTcpReceiver(sampleReceiverPort1, serverId1)
+				receiver2 = spinupTcpReceiver(sampleReceiverPort2, serverId2)
+			})
 
-			receiver1 = spinupTcpReceiver(sampleReceiverPort1, serverId1)
-			receiver2 = spinupTcpReceiver(sampleReceiverPort2, serverId2)
+			AfterEach(func() {
+				tearDownTcpReceiver(receiver1)
+				tearDownTcpReceiver(receiver2)
+			})
+
+			It("load balances the connections", func() {
+				configureMapping(externalPort1, sampleReceiverPort1, sampleReceiverPort2)
+				address := fmt.Sprintf("%s:%d", routerApiConfig.Address, externalPort1)
+				Eventually(func() error {
+					tmpconn, err := net.Dial(CONN_TYPE, address)
+					if err == nil {
+						tmpconn.Close()
+					}
+					return err
+				}, 20*time.Second, 1*time.Second).ShouldNot(HaveOccurred())
+
+				conn1, response1 := sendAndReceive(address)
+				conn2, response2 := sendAndReceive(address)
+				Expect(response1).ShouldNot(Equal(response2))
+
+				err := conn1.Close()
+				Expect(err).ShouldNot(HaveOccurred())
+				err = conn2.Close()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
 		})
 
-		AfterEach(func() {
-			tearDownTcpReceiver(receiver1)
-			tearDownTcpReceiver(receiver2)
+		Context("using routing api", func() {
+			BeforeEach(func() {
+				externalPort1 = 61500 + GinkgoParallelNode()
+				sampleReceiverPort1 = 11000 + GinkgoParallelNode()
+				sampleReceiverPort2 = 11500 + GinkgoParallelNode()
+				serverId1 = "serverId-1-multiple-receivers-routing-api"
+				serverId2 = "serverId-2-multiple-receivers-routing-api"
+
+				receiver1 = spinupTcpReceiver(sampleReceiverPort1, serverId1)
+				receiver2 = spinupTcpReceiver(sampleReceiverPort2, serverId2)
+			})
+
+			AfterEach(func() {
+				tearDownTcpReceiver(receiver1)
+				tearDownTcpReceiver(receiver2)
+			})
+
+			It("load balances the connections", func() {
+				configureRoutingApiMapping(externalPort1, sampleReceiverPort1, sampleReceiverPort2)
+
+				address := fmt.Sprintf("%s:%d", routerApiConfig.Address, externalPort1)
+
+				Eventually(func() error {
+					tmpconn, err := net.Dial(CONN_TYPE, address)
+					if err == nil {
+						tmpconn.Close()
+					}
+					return err
+				}, 20*time.Second, 1*time.Second).ShouldNot(HaveOccurred())
+
+				conn1, response1 := sendAndReceive(address)
+				conn2, response2 := sendAndReceive(address)
+				Expect(response1).ShouldNot(Equal(response2))
+
+				err := conn1.Close()
+				Expect(err).ShouldNot(HaveOccurred())
+				err = conn2.Close()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
 		})
 
-		It("load balances the connections", func() {
-			configureMapping(externalPort1, sampleReceiverPort1, sampleReceiverPort2)
-			address := fmt.Sprintf("%s:%d", routerApiConfig.Address, externalPort1)
-			Eventually(func() error {
-				tmpconn, err := net.Dial(CONN_TYPE, address)
-				if err == nil {
-					tmpconn.Close()
-				}
-				return err
-			}, 20*time.Second, 1*time.Second).ShouldNot(HaveOccurred())
-
-			conn1, response1 := sendAndReceive(address)
-			conn2, response2 := sendAndReceive(address)
-			Expect(response1).ShouldNot(Equal(response2))
-
-			err := conn1.Close()
-			Expect(err).ShouldNot(HaveOccurred())
-			err = conn2.Close()
-			Expect(err).ShouldNot(HaveOccurred())
-		})
 	})
 
 	Describe("LRP mapped to multiple external ports", func() {

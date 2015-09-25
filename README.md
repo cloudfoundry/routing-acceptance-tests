@@ -24,12 +24,21 @@ cat > router_config.json <<EOF
   "bbs_require_ssl": true,
   "bbs_client_cert": "/path/to/bbs/client.crt",
   "bbs_client_key": "/path/to/bbs/client.key",
-  "bbs_ca_cert": "/path/to/bbs/ca_cert.crt"
+  "bbs_ca_cert": "/path/to/bbs/ca_cert.crt",
+  "routing_api_url": "http://10.244.0.134:3000",
+  "oauth": {
+    "token_endpoint": "http://uaa.bosh-lite.com",
+    "client_name": "gorouter",
+    "client_secret": "gorouter-secret",
+    "port": 80
+  }
 }
 EOF
 export ROUTER_API_CONFIG=$PWD/router_config.json
 ```
 BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/desired_lrp_client/config`. Replace `router_config.json` bbs certificate fields with absolute path of certificate files.
+
+Note that IP `10.24.0.134` is IP address of `api_z1/0` job in cf release. If this IP address happens to be different in your cf release then change the entry accordingly.
 
 Make following entry in `/etc/hosts` file
 ```
