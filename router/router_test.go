@@ -1,12 +1,9 @@
 package router
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
-	"net/http"
 	"reflect"
 	"time"
 
@@ -17,7 +14,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	cf_tcp_router "github.com/cloudfoundry-incubator/cf-tcp-router"
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver/testrunner"
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/helpers"
 	"github.com/cloudfoundry-incubator/routing-api"
@@ -75,28 +71,6 @@ var _ = Describe("Routing Test", func() {
 
 		err := routingApiClient.UpsertTcpRouteMappings(tcpRouteMappings)
 		Expect(err).ToNot(HaveOccurred())
-	}
-
-	configureMapping := func(externalPort int, backendPorts ...int) {
-		backends := cf_tcp_router.BackendHostInfos{}
-		for _, backendPort := range backendPorts {
-			backends = append(backends, cf_tcp_router.NewBackendHostInfo(externalIP, uint16(backendPort)))
-		}
-
-		createMappingRequest := cf_tcp_router.MappingRequests{
-			cf_tcp_router.NewMappingRequest(uint16(externalPort), backends),
-		}
-		payload, err := json.Marshal(createMappingRequest)
-
-		Expect(err).ToNot(HaveOccurred())
-
-		resp, err := http.Post(fmt.Sprintf(
-			"http://%s:%d/v0/external_ports",
-			routerApiConfig.Address, routerApiConfig.Port),
-			"application/json", bytes.NewBuffer(payload))
-		Expect(err).ToNot(HaveOccurred())
-
-		Expect(resp.StatusCode).Should(Equal(http.StatusOK))
 	}
 
 	checkConnection := func(errChan chan error, address string, serverId string) {
@@ -168,31 +142,6 @@ var _ = Describe("Routing Test", func() {
 	}
 
 	Describe("A sample receiver running as a separate process", func() {
-		Context("using tcp configurer", func() {
-			BeforeEach(func() {
-				externalPort1 = 60000 + GinkgoParallelNode()
-				sampleReceiverPort1 = 9000 + GinkgoParallelNode()
-				sampleReceiverPort2 = 9500 + GinkgoParallelNode()
-				serverId1 = "serverId1"
-				serverId2 = "serverId2"
-
-				receiver1 = spinupTcpReceiver(sampleReceiverPort1, serverId1)
-				receiver2 = spinupTcpReceiver(sampleReceiverPort2, serverId2)
-			})
-
-			AfterEach(func() {
-				tearDownTcpReceiver(receiver1)
-				tearDownTcpReceiver(receiver2)
-			})
-			It("routes traffic to sample receiver", func() {
-				configureMapping(externalPort1, sampleReceiverPort1)
-				verifyConnection(externalPort1, serverId1)
-
-				By("altering the mapping it routes to new backend")
-				configureMapping(externalPort1, sampleReceiverPort2)
-				verifyConnection(externalPort1, serverId2)
-			})
-		})
 		Context("using routing api", func() {
 			BeforeEach(func() {
 				externalPort1 = 60500 + GinkgoParallelNode()
@@ -234,44 +183,6 @@ var _ = Describe("Routing Test", func() {
 
 			return conn, string(response[0:count])
 		}
-		Context("using tcp configurer", func() {
-			BeforeEach(func() {
-				externalPort1 = 61000 + GinkgoParallelNode()
-				sampleReceiverPort1 = 7000 + GinkgoParallelNode()
-				sampleReceiverPort2 = 7500 + GinkgoParallelNode()
-				serverId1 = "serverId3"
-				serverId2 = "serverId4"
-
-				receiver1 = spinupTcpReceiver(sampleReceiverPort1, serverId1)
-				receiver2 = spinupTcpReceiver(sampleReceiverPort2, serverId2)
-			})
-
-			AfterEach(func() {
-				tearDownTcpReceiver(receiver1)
-				tearDownTcpReceiver(receiver2)
-			})
-
-			It("load balances the connections", func() {
-				configureMapping(externalPort1, sampleReceiverPort1, sampleReceiverPort2)
-				address := fmt.Sprintf("%s:%d", routerApiConfig.Address, externalPort1)
-				Eventually(func() error {
-					tmpconn, err := net.Dial(CONN_TYPE, address)
-					if err == nil {
-						tmpconn.Close()
-					}
-					return err
-				}, 20*time.Second, 1*time.Second).ShouldNot(HaveOccurred())
-
-				conn1, response1 := sendAndReceive(address)
-				conn2, response2 := sendAndReceive(address)
-				Expect(response1).ShouldNot(Equal(response2))
-
-				err := conn1.Close()
-				Expect(err).ShouldNot(HaveOccurred())
-				err = conn2.Close()
-				Expect(err).ShouldNot(HaveOccurred())
-			})
-		})
 
 		Context("using routing api", func() {
 			BeforeEach(func() {
