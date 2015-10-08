@@ -60,16 +60,27 @@ var _ = Describe("Routing Test", func() {
 		routingApiClient.SetToken(token.AccessToken)
 	})
 
-	configureRoutingApiMapping := func(externalPort int, backendPorts ...int) {
-
+	getTcpRouteMappings := func(externalPort int, backendPorts ...int) []db.TcpRouteMapping {
 		tcpRouteMappings := make([]db.TcpRouteMapping, 0)
 
 		for _, backendPort := range backendPorts {
 			tcpMapping := db.NewTcpRouteMapping(ROUTER_GROUP_1, uint16(externalPort), externalIP, uint16(backendPort))
 			tcpRouteMappings = append(tcpRouteMappings, tcpMapping)
 		}
+		return tcpRouteMappings
+	}
+
+	configureRoutingApiMapping := func(externalPort int, backendPorts ...int) {
+		tcpRouteMappings := getTcpRouteMappings(externalPort, backendPorts...)
 
 		err := routingApiClient.UpsertTcpRouteMappings(tcpRouteMappings)
+		Expect(err).ToNot(HaveOccurred())
+	}
+
+	deleteRoutingApiMapping := func(externalPort int, backendPorts ...int) {
+		tcpRouteMappings := getTcpRouteMappings(externalPort, backendPorts...)
+
+		err := routingApiClient.DeleteTcpRouteMappings(tcpRouteMappings)
 		Expect(err).ToNot(HaveOccurred())
 	}
 
@@ -153,10 +164,15 @@ var _ = Describe("Routing Test", func() {
 				receiver1 = spinupTcpReceiver(sampleReceiverPort1, serverId1)
 				receiver2 = spinupTcpReceiver(sampleReceiverPort2, serverId2)
 			})
+
 			AfterEach(func() {
 				tearDownTcpReceiver(receiver1)
 				tearDownTcpReceiver(receiver2)
+
+				deleteRoutingApiMapping(externalPort1, sampleReceiverPort1)
+				deleteRoutingApiMapping(externalPort1, sampleReceiverPort2)
 			})
+
 			It("routes traffic to sample receiver", func() {
 				configureRoutingApiMapping(externalPort1, sampleReceiverPort1)
 				verifyConnection(externalPort1, serverId1)
@@ -199,6 +215,8 @@ var _ = Describe("Routing Test", func() {
 			AfterEach(func() {
 				tearDownTcpReceiver(receiver1)
 				tearDownTcpReceiver(receiver2)
+
+				deleteRoutingApiMapping(externalPort1, sampleReceiverPort1, sampleReceiverPort2)
 			})
 
 			It("load balances the connections", func() {
