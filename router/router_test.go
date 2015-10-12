@@ -274,8 +274,7 @@ var _ = Describe("Routing Test", func() {
 
 		BeforeEach(func() {
 			var bbsErr error
-			bbsClient, bbsErr = bbs.NewSecureClient(routerApiConfig.BBSAddress, routerApiConfig.BBSCACertFile,
-				routerApiConfig.BBSClientCertFile, routerApiConfig.BBSClientKeyFile)
+			bbsClient, bbsErr = helpers.GetBbsClient(routerApiConfig)
 			Expect(bbsErr).ToNot(HaveOccurred())
 
 			externalPort1 = 34500 + GinkgoParallelNode()
@@ -314,8 +313,7 @@ var _ = Describe("Routing Test", func() {
 
 		BeforeEach(func() {
 			var bbsErr error
-			bbsClient, bbsErr = bbs.NewSecureClient(routerApiConfig.BBSAddress, routerApiConfig.BBSCACertFile,
-				routerApiConfig.BBSClientCertFile, routerApiConfig.BBSClientKeyFile)
+			bbsClient, bbsErr = helpers.GetBbsClient(routerApiConfig)
 			Expect(bbsErr).ToNot(HaveOccurred())
 
 			externalPort1 = 62000 + GinkgoParallelNode()

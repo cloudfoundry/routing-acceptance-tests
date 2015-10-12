@@ -2,7 +2,11 @@ package helpers
 
 import (
 	"encoding/json"
+	"errors"
+	"net/url"
 	"os"
+
+	"github.com/cloudfoundry-incubator/bbs"
 )
 
 type RouterApiConfig struct {
@@ -86,4 +90,26 @@ func configPath() string {
 	}
 
 	return path
+}
+
+func GetBbsClient(routerApiConfig RouterApiConfig) (bbs.Client, error) {
+	bbsUrl, err := url.Parse(routerApiConfig.BBSAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	var bbsClient bbs.Client
+
+	if bbsUrl.Scheme == "http" {
+		bbsClient = bbs.NewClient(bbsUrl.String())
+	} else if bbsUrl.Scheme == "https" {
+		bbsClient, err = bbs.NewSecureClient(bbsUrl.String(), routerApiConfig.BBSCACertFile,
+			routerApiConfig.BBSClientCertFile, routerApiConfig.BBSClientKeyFile)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, errors.New("invalid-scheme-in-bbs-address")
+	}
+	return bbsClient, nil
 }
