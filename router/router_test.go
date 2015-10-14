@@ -16,10 +16,8 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver/testrunner"
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/helpers"
-	"github.com/cloudfoundry-incubator/routing-api"
 	"github.com/cloudfoundry-incubator/routing-api/db"
 	"github.com/cloudfoundry-incubator/tcp-emitter/tcp_routes"
-	token_fetcher "github.com/cloudfoundry-incubator/uaa-token-fetcher"
 )
 
 const (
@@ -37,28 +35,13 @@ var _ = Describe("Routing Test", func() {
 		serverId1           string
 		serverId2           string
 
-		receiver1        ifrit.Process
-		receiver2        ifrit.Process
-		routingApiClient routing_api.Client
+		receiver1 ifrit.Process
+		receiver2 ifrit.Process
 	)
 
 	const (
 		ROUTER_GROUP_1 = "rtr-grp-1"
 	)
-
-	BeforeEach(func() {
-		routingApiClient = routing_api.NewClient(routerApiConfig.RoutingApiUrl)
-		oauth := token_fetcher.OAuthConfig{
-			TokenEndpoint: routerApiConfig.OAuth.TokenEndpoint,
-			ClientName:    routerApiConfig.OAuth.ClientName,
-			ClientSecret:  routerApiConfig.OAuth.ClientSecret,
-			Port:          routerApiConfig.OAuth.Port,
-		}
-		tokenFetcher := token_fetcher.NewTokenFetcher(&oauth)
-		token, err := tokenFetcher.FetchToken()
-		Expect(err).ToNot(HaveOccurred())
-		routingApiClient.SetToken(token.AccessToken)
-	})
 
 	getTcpRouteMappings := func(externalPort int, backendPorts ...int) []db.TcpRouteMapping {
 		tcpRouteMappings := make([]db.TcpRouteMapping, 0)
@@ -137,6 +120,12 @@ var _ = Describe("Routing Test", func() {
 				}
 			}
 		}
+	}
+
+	verifyPortClosed := func(externalPort int) bool {
+		address := fmt.Sprintf("%s:%d", routerApiConfig.Address, externalPort)
+		conn, _ := net.DialTimeout(CONN_TYPE, address, DEFAULT_CONNECT_TIMEOUT)
+		return conn == nil
 	}
 
 	spinupTcpReceiver := func(port int, id string) ifrit.Process {
@@ -334,6 +323,7 @@ var _ = Describe("Routing Test", func() {
 		})
 
 		It("receives TCP traffic on desired external port", func() {
+			oldExternalPort := externalPort1
 			verifyConnection(externalPort1, serverId1)
 
 			By("updating LRP with new external port it receives traffic on new external port")
@@ -343,6 +333,7 @@ var _ = Describe("Routing Test", func() {
 			err := bbsClient.UpdateDesiredLRP(processGuid, updatedLrp)
 			Expect(err).ShouldNot(HaveOccurred())
 			verifyConnection(externalPort1, serverId1)
+			Eventually(verifyPortClosed(oldExternalPort)).Should(BeTrue())
 		})
 	})
 })

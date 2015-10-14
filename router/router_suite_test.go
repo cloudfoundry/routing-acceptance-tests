@@ -13,6 +13,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/helpers"
 	"github.com/cloudfoundry-incubator/cf-tcp-router/testutil"
+	"github.com/cloudfoundry-incubator/routing-api"
+	"github.com/cloudfoundry-incubator/uaa-token-fetcher"
 )
 
 func TestRouter(t *testing.T) {
@@ -25,6 +27,7 @@ var (
 	externalIP         string
 	routerApiConfig    helpers.RouterApiConfig
 	logger             lager.Logger
+	routingApiClient   routing_api.Client
 )
 
 var _ = SynchronizedBeforeSuite(func() []byte {
@@ -47,6 +50,24 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	externalIP = testutil.GetExternalIP()
 	routerApiConfig = helpers.LoadConfig()
 	logger = lagertest.NewTestLogger("test")
+
+	routingApiClient = routing_api.NewClient(routerApiConfig.RoutingApiUrl)
+	oauth := token_fetcher.OAuthConfig{
+		TokenEndpoint: routerApiConfig.OAuth.TokenEndpoint,
+		ClientName:    routerApiConfig.OAuth.ClientName,
+		ClientSecret:  routerApiConfig.OAuth.ClientSecret,
+		Port:          routerApiConfig.OAuth.Port,
+	}
+	tokenFetcher := token_fetcher.NewTokenFetcher(&oauth)
+	token, err := tokenFetcher.FetchToken()
+	Expect(err).ToNot(HaveOccurred())
+	routingApiClient.SetToken(token.AccessToken)
+
+	// Cleaning up all the pre-existing routes.
+	tcpRouteMappings, err := routingApiClient.TcpRouteMappings()
+	Expect(err).ToNot(HaveOccurred())
+	err = routingApiClient.DeleteTcpRouteMappings(tcpRouteMappings)
+	Expect(err).ToNot(HaveOccurred())
 })
 
 var _ = SynchronizedAfterSuite(func() {
