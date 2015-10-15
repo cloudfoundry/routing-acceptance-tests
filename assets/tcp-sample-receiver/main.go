@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
+	"sync"
 )
 
 const (
@@ -17,7 +19,7 @@ const (
 var serverAddress = flag.String(
 	"address",
 	DEFAULT_ADDRESS,
-	"The host:port that the server is bound to.",
+	"Comma separated addresses in host:port format that the server will bind to.",
 )
 
 var serverId = flag.String(
@@ -28,29 +30,40 @@ var serverId = flag.String(
 
 func main() {
 	flag.Parse()
+	addresses := strings.Split(*serverAddress, ",")
+	includeServerAddress := len(addresses) > 1
+	wg := sync.WaitGroup{}
+	for _, address := range addresses {
+		wg.Add(1)
+		go launchServer(address, includeServerAddress, &wg)
+	}
+	wg.Wait()
+}
+
+func launchServer(address string, includeServerAddress bool, wg *sync.WaitGroup) {
 	// Listen for incoming connections.
-	listener, err := net.Listen(CONN_TYPE, *serverAddress)
+	listener, err := net.Listen(CONN_TYPE, address)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
 	// Close the listener when the application closes.
 	defer listener.Close()
-	fmt.Printf("%s:Listening on %s\n", *serverId, *serverAddress)
+	fmt.Printf("%s:Listening on %s\n", *serverId, address)
 	for {
 		// Listen for an incoming connection.
 		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println("Error accepting: ", err.Error())
-			os.Exit(1)
+			wg.Done()
 		}
 		// Handle connections in a new goroutine.
-		go handleRequest(conn)
+		go handleRequest(conn, includeServerAddress, address)
 	}
 }
 
 // Handles incoming requests.
-func handleRequest(conn net.Conn) {
+func handleRequest(conn net.Conn, includeServerAddress bool, address string) {
 	// Close the connection when you're done with it.
 	defer conn.Close()
 	// Make a buffer to hold incoming data.
@@ -65,6 +78,9 @@ func handleRequest(conn net.Conn) {
 		}
 		var writeBuffer bytes.Buffer
 		writeBuffer.WriteString(*serverId)
+		if includeServerAddress {
+			writeBuffer.WriteString("(" + address + ")")
+		}
 		writeBuffer.WriteString(":")
 		writeBuffer.Write(buff[0:readBytes])
 		fmt.Print(writeBuffer.String())

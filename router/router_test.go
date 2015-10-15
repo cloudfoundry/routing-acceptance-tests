@@ -234,106 +234,151 @@ var _ = Describe("Routing Test", func() {
 
 	})
 
-	Describe("LRP mapped to multiple external ports", func() {
-		var (
-			bbsClient   bbs.Client
-			processGuid string
-		)
+	Describe("LRP", func() {
 
-		createDesiredLRPTwoExternalPorts := func(
-			externalPort1,
-			externalPort2,
-			sampleReceiverPort1 uint32,
-			serverId string) *models.DesiredLRP {
-			lrp := helpers.CreateDesiredLRP(logger,
-				externalPort1, sampleReceiverPort1, serverId1, 1)
-
-			route1 := tcp_routes.TCPRoute{
-				ExternalPort:  externalPort1,
-				ContainerPort: sampleReceiverPort1,
-			}
-			route2 := tcp_routes.TCPRoute{
-				ExternalPort:  externalPort2,
-				ContainerPort: sampleReceiverPort1,
-			}
-			routes := tcp_routes.TCPRoutes{route1, route2}
-			lrp.Routes = routes.RoutingInfo()
-			return lrp
-		}
-
-		BeforeEach(func() {
-			var bbsErr error
-			bbsClient, bbsErr = helpers.GetBbsClient(routerApiConfig)
-			Expect(bbsErr).ToNot(HaveOccurred())
-
-			externalPort1 = 34500 + GinkgoParallelNode()
-			externalPort2 = 12300 + GinkgoParallelNode()
-
-			sampleReceiverPort1 = 7000 + GinkgoParallelNode()
-			serverId1 = "serverId6"
-
-			lrp := createDesiredLRPTwoExternalPorts(
-				uint32(externalPort1),
-				uint32(externalPort2),
-				uint32(sampleReceiverPort1),
-				serverId1,
+		Context("mapped to multiple external ports", func() {
+			var (
+				bbsClient   bbs.Client
+				processGuid string
 			)
-			err := bbsClient.DesireLRP(lrp)
-			Expect(err).ShouldNot(HaveOccurred())
-			processGuid = lrp.ProcessGuid
+
+			createDesiredLRPTwoExternalPorts := func(
+				externalPort1,
+				externalPort2,
+				sampleReceiverPort1 uint32,
+				serverId string) *models.DesiredLRP {
+				containerPorts := []uint32{sampleReceiverPort1}
+				route1 := tcp_routes.TCPRoute{
+					ExternalPort:  externalPort1,
+					ContainerPort: sampleReceiverPort1,
+				}
+				route2 := tcp_routes.TCPRoute{
+					ExternalPort:  externalPort2,
+					ContainerPort: sampleReceiverPort1,
+				}
+				routes := tcp_routes.TCPRoutes{route1, route2}
+				lrp := helpers.CreateDesiredLRP(logger, containerPorts, routes, serverId1, 1)
+				return lrp
+			}
+
+			BeforeEach(func() {
+				var bbsErr error
+				bbsClient, bbsErr = helpers.GetBbsClient(routerApiConfig)
+				Expect(bbsErr).ToNot(HaveOccurred())
+
+				externalPort1 = 34500 + GinkgoParallelNode()
+				externalPort2 = 12300 + GinkgoParallelNode()
+
+				sampleReceiverPort1 = 7000 + GinkgoParallelNode()
+				serverId1 = "serverId6"
+
+				lrp := createDesiredLRPTwoExternalPorts(
+					uint32(externalPort1),
+					uint32(externalPort2),
+					uint32(sampleReceiverPort1),
+					serverId1,
+				)
+				err := bbsClient.DesireLRP(lrp)
+				Expect(err).ShouldNot(HaveOccurred())
+				processGuid = lrp.ProcessGuid
+			})
+
+			AfterEach(func() {
+				err := bbsClient.RemoveDesiredLRP(processGuid)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("sends traffic on the different external ports to the same container port", func() {
+				verifyConnection(externalPort1, serverId1)
+				verifyConnection(externalPort2, serverId1)
+			})
 		})
 
-		AfterEach(func() {
-			err := bbsClient.RemoveDesiredLRP(processGuid)
-			Expect(err).ShouldNot(HaveOccurred())
-		})
+		Context("mapped to single external port", func() {
+			var (
+				bbsClient   bbs.Client
+				processGuid string
+				lrp         *models.DesiredLRP
+			)
+			BeforeEach(func() {
+				var bbsErr error
+				bbsClient, bbsErr = helpers.GetBbsClient(routerApiConfig)
+				Expect(bbsErr).ToNot(HaveOccurred())
+				externalPort1 = 62000 + GinkgoParallelNode()
+			})
 
-		It("sends traffic on the different external ports to the same container port", func() {
-			verifyConnection(externalPort1, serverId1)
-			verifyConnection(externalPort2, serverId1)
-		})
-	})
+			JustBeforeEach(func() {
+				err := bbsClient.DesireLRP(lrp)
+				Expect(err).ShouldNot(HaveOccurred())
+				processGuid = lrp.ProcessGuid
+			})
 
-	Describe("LRP with TCP routing requirements is desired", func() {
-		var (
-			bbsClient   bbs.Client
-			processGuid string
-		)
+			AfterEach(func() {
+				err := bbsClient.RemoveDesiredLRP(processGuid)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
 
-		BeforeEach(func() {
-			var bbsErr error
-			bbsClient, bbsErr = helpers.GetBbsClient(routerApiConfig)
-			Expect(bbsErr).ToNot(HaveOccurred())
+			Context("with one container port", func() {
+				BeforeEach(func() {
+					sampleReceiverPort1 = 8000 + GinkgoParallelNode()
+					serverId1 = fmt.Sprintf("serverId-%d", GinkgoParallelNode())
 
-			externalPort1 = 62000 + GinkgoParallelNode()
-			sampleReceiverPort1 = 8000 + GinkgoParallelNode()
-			serverId1 = fmt.Sprintf("serverId-%d", GinkgoParallelNode())
+					containerPorts := []uint32{uint32(sampleReceiverPort1)}
+					route1 := tcp_routes.TCPRoute{
+						ExternalPort:  uint32(externalPort1),
+						ContainerPort: uint32(sampleReceiverPort1),
+					}
 
-			lrp := helpers.CreateDesiredLRP(logger,
-				uint32(externalPort1), uint32(sampleReceiverPort1), serverId1, 1)
+					routes := tcp_routes.TCPRoutes{route1}
+					lrp = helpers.CreateDesiredLRP(logger, containerPorts, routes, serverId1, 1)
+				})
 
-			err := bbsClient.DesireLRP(lrp)
-			Expect(err).ShouldNot(HaveOccurred())
-			processGuid = lrp.ProcessGuid
-		})
+				It("receives TCP traffic on desired external port", func() {
+					oldExternalPort := externalPort1
+					verifyConnection(externalPort1, serverId1)
 
-		AfterEach(func() {
-			err := bbsClient.RemoveDesiredLRP(processGuid)
-			Expect(err).ShouldNot(HaveOccurred())
-		})
+					By("updating LRP with new external port it receives traffic on new external port")
+					externalPort1 = 63000 + GinkgoParallelNode()
+					updatedLrp := helpers.UpdateDesiredLRP(uint32(externalPort1),
+						uint32(sampleReceiverPort1), 1)
+					err := bbsClient.UpdateDesiredLRP(processGuid, updatedLrp)
+					Expect(err).ShouldNot(HaveOccurred())
+					verifyConnection(externalPort1, serverId1)
+					Eventually(verifyPortClosed(oldExternalPort)).Should(BeTrue())
+				})
+			})
 
-		It("receives TCP traffic on desired external port", func() {
-			oldExternalPort := externalPort1
-			verifyConnection(externalPort1, serverId1)
+			Context("with multiple container ports", func() {
+				BeforeEach(func() {
+					sampleReceiverPort1 = 8000 + GinkgoParallelNode()
+					sampleReceiverPort2 = 9000 + GinkgoParallelNode()
+					serverId1 = fmt.Sprintf("serverId-%d", GinkgoParallelNode())
 
-			By("updating LRP with new external port it receives traffic on new external port")
-			externalPort1 = 63000 + GinkgoParallelNode()
-			updatedLrp := helpers.UpdateDesiredLRP(uint32(externalPort1),
-				uint32(sampleReceiverPort1), 1)
-			err := bbsClient.UpdateDesiredLRP(processGuid, updatedLrp)
-			Expect(err).ShouldNot(HaveOccurred())
-			verifyConnection(externalPort1, serverId1)
-			Eventually(verifyPortClosed(oldExternalPort)).Should(BeTrue())
+					containerPorts := []uint32{uint32(sampleReceiverPort1), uint32(sampleReceiverPort2)}
+					route1 := tcp_routes.TCPRoute{
+						ExternalPort:  uint32(externalPort1),
+						ContainerPort: uint32(sampleReceiverPort1),
+					}
+
+					routes := tcp_routes.TCPRoutes{route1}
+					lrp = helpers.CreateDesiredLRP(logger, containerPorts, routes, serverId1, 1)
+				})
+
+				It("receives TCP traffic on desired external port", func() {
+					prefix := serverId1 + fmt.Sprintf("(0.0.0.0:%d)", sampleReceiverPort1)
+					verifyConnection(externalPort1, prefix)
+
+					By("updating LRP to map external port to different container port")
+					updatedLrp := helpers.UpdateDesiredLRP(uint32(externalPort1),
+						uint32(sampleReceiverPort2), 1)
+					err := bbsClient.UpdateDesiredLRP(processGuid, updatedLrp)
+					Expect(err).ShouldNot(HaveOccurred())
+
+					prefix = serverId1 + fmt.Sprintf("(0.0.0.0:%d)", sampleReceiverPort2)
+					verifyConnection(externalPort1, prefix)
+
+				})
+			})
 		})
 	})
 })

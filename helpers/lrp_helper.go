@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/tcp-emitter/tcp_routes"
@@ -10,19 +11,19 @@ import (
 )
 
 func CreateDesiredLRP(
-	logger lager.Logger, externalPort,
-	containerPort uint32, serverId string,
+	logger lager.Logger, containerPorts []uint32,
+	routes tcp_routes.TCPRoutes, serverId string,
 	instances int) *models.DesiredLRP {
 	newProcessGuid, err := uuid.NewV4()
 	if err != nil {
 		logger.Error("failed-generate-guid", err)
 		return nil
 	}
-	route := tcp_routes.TCPRoute{
-		ExternalPort:  externalPort,
-		ContainerPort: containerPort,
+	addresses := make([]string, 0)
+	for _, containerPort := range containerPorts {
+		addresses = append(addresses, fmt.Sprintf("0.0.0.0:%d", containerPort))
 	}
-	routes := tcp_routes.TCPRoutes{route}
+	address := strings.Join(addresses, ",")
 	lrp := models.DesiredLRP{
 		ProcessGuid: newProcessGuid.String(),
 		LogGuid:     "log-guid",
@@ -44,7 +45,7 @@ func CreateDesiredLRP(
 				User: "vcap",
 				Args: []string{
 					"-c",
-					fmt.Sprintf("/tmp/tcp-sample-receiver -address 0.0.0.0:%d -serverId %s", containerPort, serverId),
+					fmt.Sprintf("/tmp/tcp-sample-receiver -address %s -serverId %s", address, serverId),
 				},
 			},
 		},
@@ -54,7 +55,7 @@ func CreateDesiredLRP(
 				User: "vcap",
 				Args: []string{
 					"-c",
-					fmt.Sprintf("nc -z 0.0.0.0 %d", containerPort),
+					fmt.Sprintf("nc -z 0.0.0.0 %d", containerPorts[0]),
 				},
 			},
 		},
@@ -62,7 +63,7 @@ func CreateDesiredLRP(
 		RootFs:       "preloaded:cflinuxfs2",
 		MemoryMb:     128,
 		DiskMb:       128,
-		Ports:        []uint32{containerPort},
+		Ports:        containerPorts,
 		Routes:       routes.RoutingInfo(),
 		EgressRules: []*models.SecurityGroupRule{
 			&models.SecurityGroupRule{
