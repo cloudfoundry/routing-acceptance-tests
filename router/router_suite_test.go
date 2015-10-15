@@ -14,6 +14,7 @@ import (
 	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/helpers"
 	"github.com/cloudfoundry-incubator/cf-tcp-router/testutil"
 	"github.com/cloudfoundry-incubator/routing-api"
+	"github.com/cloudfoundry-incubator/routing-api/db"
 	"github.com/cloudfoundry-incubator/uaa-token-fetcher"
 )
 
@@ -29,6 +30,26 @@ var (
 	logger             lager.Logger
 	routingApiClient   routing_api.Client
 )
+
+func validateTcpRouteMapping(tcpRouteMapping db.TcpRouteMapping) bool {
+	if tcpRouteMapping.TcpRoute.RouterGroupGuid == "" {
+		return false
+	}
+
+	if tcpRouteMapping.TcpRoute.ExternalPort <= 0 {
+		return false
+	}
+
+	if tcpRouteMapping.HostIP == "" {
+		return false
+	}
+
+	if tcpRouteMapping.HostPort <= 0 {
+		return false
+	}
+
+	return true
+}
 
 var _ = SynchronizedBeforeSuite(func() []byte {
 	sampleReceiver, err := gexec.Build("github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver", "-race")
@@ -66,7 +87,13 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	// Cleaning up all the pre-existing routes.
 	tcpRouteMappings, err := routingApiClient.TcpRouteMappings()
 	Expect(err).ToNot(HaveOccurred())
-	err = routingApiClient.DeleteTcpRouteMappings(tcpRouteMappings)
+	deleteTcpRouteMappings := make([]db.TcpRouteMapping, 0)
+	for _, tcpRouteMapping := range tcpRouteMappings {
+		if validateTcpRouteMapping(tcpRouteMapping) {
+			deleteTcpRouteMappings = append(deleteTcpRouteMappings, tcpRouteMapping)
+		}
+	}
+	err = routingApiClient.DeleteTcpRouteMappings(deleteTcpRouteMappings)
 	Expect(err).ToNot(HaveOccurred())
 })
 
