@@ -18,7 +18,7 @@ The following commands will create a config file `router_config.json` for a [bos
 cd ~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/
 cat > router_config.json <<EOF
 {
-  "address": "10.244.8.2",
+  "addresses": ["10.244.8.2"],
   "port": 9999,
   "bbs_api_url": "https://bbs.service.cf.internal:8889",
   "bbs_require_ssl": true,

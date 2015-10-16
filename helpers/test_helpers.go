@@ -10,7 +10,7 @@ import (
 )
 
 type RouterApiConfig struct {
-	Address           string       `json:"address"`
+	Addresses         []string     `json:"addresses"`
 	Port              uint16       `json:"port"`
 	BBSAddress        string       `json:"bbs_api_url,omitempty"`
 	BBSClientCertFile string       `json:"bbs_client_cert,omitempty"`
@@ -41,8 +41,8 @@ func LoadConfig() RouterApiConfig {
 		panic("missing configuration oauth")
 	}
 
-	if loadedConfig.Address == "" {
-		panic("missing configuration 'address'")
+	if len(loadedConfig.Addresses) == 0 {
+		panic("missing configuration 'addresses'")
 	}
 
 	if loadedConfig.Port == 0 {

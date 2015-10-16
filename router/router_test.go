@@ -28,12 +28,8 @@ const (
 var _ = Describe("Routing Test", func() {
 
 	var (
-		externalPort1       int
-		externalPort2       int
-		sampleReceiverPort1 int
-		sampleReceiverPort2 int
-		serverId1           string
-		serverId2           string
+		serverId1 string
+		serverId2 string
 
 		receiver1 ifrit.Process
 		receiver2 ifrit.Process
@@ -98,9 +94,9 @@ var _ = Describe("Routing Test", func() {
 		errChan <- conn.Close()
 	}
 
-	verifyConnection := func(externalPort int, serverId string) {
+	verifyConnection := func(externalPort int, serverId string, addr string) {
 		errChan := make(chan error, 1)
-		address := fmt.Sprintf("%s:%d", routerApiConfig.Address, externalPort)
+		address := fmt.Sprintf("%s:%d", addr, externalPort)
 		go checkConnection(errChan, address, serverId)
 		i := 0
 	OUTERLOOP:
@@ -122,10 +118,16 @@ var _ = Describe("Routing Test", func() {
 		}
 	}
 
-	verifyPortClosed := func(externalPort int) bool {
-		address := fmt.Sprintf("%s:%d", routerApiConfig.Address, externalPort)
+	verifyPortClosedOnAddress := func(externalPort int, addr string) bool {
+		address := fmt.Sprintf("%s:%d", addr, externalPort)
 		conn, _ := net.DialTimeout(CONN_TYPE, address, DEFAULT_CONNECT_TIMEOUT)
 		return conn == nil
+	}
+
+	verifyPortClosed := func(port int) {
+		for _, address := range routerApiConfig.Addresses {
+			Eventually(verifyPortClosedOnAddress(port, address), "30s").Should(BeTrue())
+		}
 	}
 
 	spinupTcpReceiver := func(port int, id string) ifrit.Process {
@@ -141,12 +143,64 @@ var _ = Describe("Routing Test", func() {
 		ginkgomon.Kill(receiverProcess, 5*time.Second)
 	}
 
+	verifyConnections := func(externalPort int, serverId string) {
+		for _, address := range routerApiConfig.Addresses {
+			verifyConnection(externalPort, serverId, address)
+		}
+	}
+
+	sendAndReceive := func(address string) (net.Conn, string) {
+		conn, err := net.DialTimeout(CONN_TYPE, address, DEFAULT_CONNECT_TIMEOUT)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		message := "Hello"
+		_, err = conn.Write([]byte(message))
+		Expect(err).ShouldNot(HaveOccurred())
+
+		response := make([]byte, 1024)
+		count, err := conn.Read(response)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		return conn, string(response[0:count])
+	}
+
+	verifyLoadBalancing := func(externalPort int, addr string, expectedResponses []string) {
+		address := fmt.Sprintf("%s:%d", addr, externalPort)
+
+		Eventually(func() error {
+			tmpconn, err := net.Dial(CONN_TYPE, address)
+			if err == nil {
+				tmpconn.Close()
+			}
+			return err
+		}, 40*time.Second, 1*time.Second).ShouldNot(HaveOccurred())
+
+		conn1, response1 := sendAndReceive(address)
+		conn2, response2 := sendAndReceive(address)
+		Expect(response1).ShouldNot(Equal(response2))
+
+		Expect(len(expectedResponses)).Should(Equal(2))
+		Expect(expectedResponses).Should(ContainElement(response1))
+		Expect(expectedResponses).Should(ContainElement(response2))
+
+		err := conn1.Close()
+		Expect(err).ShouldNot(HaveOccurred())
+		err = conn2.Close()
+		Expect(err).ShouldNot(HaveOccurred())
+	}
+
 	Describe("A sample receiver running as a separate process", func() {
+		var (
+			externalPort1       int
+			sampleReceiverPort1 int
+			sampleReceiverPort2 int
+		)
+
 		Context("using routing api", func() {
 			BeforeEach(func() {
-				externalPort1 = 60500 + GinkgoParallelNode()
-				sampleReceiverPort1 = 10500 + GinkgoParallelNode()
-				sampleReceiverPort2 = 11000 + GinkgoParallelNode()
+				externalPort1 = nextExternalPort() + GinkgoParallelNode()
+				sampleReceiverPort1 = nextContainerPort() + GinkgoParallelNode()
+				sampleReceiverPort2 = nextContainerPort() + GinkgoParallelNode()
 				serverId1 = "serverId-1-routing-api"
 				serverId2 = "serverId-2-routing-api"
 
@@ -160,40 +214,32 @@ var _ = Describe("Routing Test", func() {
 
 				deleteRoutingApiMapping(externalPort1, sampleReceiverPort1)
 				deleteRoutingApiMapping(externalPort1, sampleReceiverPort2)
+				verifyPortClosed(externalPort1)
 			})
 
 			It("routes traffic to sample receiver", func() {
 				configureRoutingApiMapping(externalPort1, sampleReceiverPort1)
-				verifyConnection(externalPort1, serverId1)
+				verifyConnections(externalPort1, serverId1)
 
 				By("altering the mapping it routes to new backend")
 				configureRoutingApiMapping(externalPort1, sampleReceiverPort2)
-				verifyConnection(externalPort1, serverId2)
+				verifyConnections(externalPort1, serverId2)
 			})
 		})
 	})
 
 	Describe("Multiple sample receivers running as a separate process and mapped to same external port", func() {
-		sendAndReceive := func(address string) (net.Conn, string) {
-			conn, err := net.DialTimeout(CONN_TYPE, address, DEFAULT_CONNECT_TIMEOUT)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			message := "Hello"
-			_, err = conn.Write([]byte(message))
-			Expect(err).ShouldNot(HaveOccurred())
-
-			response := make([]byte, 1024)
-			count, err := conn.Read(response)
-			Expect(err).ShouldNot(HaveOccurred())
-
-			return conn, string(response[0:count])
-		}
+		var (
+			externalPort1       int
+			sampleReceiverPort1 int
+			sampleReceiverPort2 int
+		)
 
 		Context("using routing api", func() {
 			BeforeEach(func() {
-				externalPort1 = 61500 + GinkgoParallelNode()
-				sampleReceiverPort1 = 11000 + GinkgoParallelNode()
-				sampleReceiverPort2 = 11500 + GinkgoParallelNode()
+				externalPort1 = nextExternalPort() + GinkgoParallelNode()
+				sampleReceiverPort1 = nextContainerPort() + GinkgoParallelNode()
+				sampleReceiverPort2 = nextContainerPort() + GinkgoParallelNode()
 				serverId1 = "serverId-1-multiple-receivers-routing-api"
 				serverId2 = "serverId-2-multiple-receivers-routing-api"
 
@@ -206,40 +252,28 @@ var _ = Describe("Routing Test", func() {
 				tearDownTcpReceiver(receiver2)
 
 				deleteRoutingApiMapping(externalPort1, sampleReceiverPort1, sampleReceiverPort2)
+				verifyPortClosed(externalPort1)
 			})
 
 			It("load balances the connections", func() {
 				configureRoutingApiMapping(externalPort1, sampleReceiverPort1, sampleReceiverPort2)
-
-				address := fmt.Sprintf("%s:%d", routerApiConfig.Address, externalPort1)
-
-				Eventually(func() error {
-					tmpconn, err := net.Dial(CONN_TYPE, address)
-					if err == nil {
-						tmpconn.Close()
-					}
-					return err
-				}, 20*time.Second, 1*time.Second).ShouldNot(HaveOccurred())
-
-				conn1, response1 := sendAndReceive(address)
-				conn2, response2 := sendAndReceive(address)
-				Expect(response1).ShouldNot(Equal(response2))
-
-				err := conn1.Close()
-				Expect(err).ShouldNot(HaveOccurred())
-				err = conn2.Close()
-				Expect(err).ShouldNot(HaveOccurred())
+				expectedResponses := []string{fmt.Sprintf("%s:Hello", serverId1), fmt.Sprintf("%s:Hello", serverId2)}
+				for _, address := range routerApiConfig.Addresses {
+					verifyLoadBalancing(externalPort1, address, expectedResponses)
+				}
 			})
 		})
 
 	})
 
 	Describe("LRP", func() {
-
 		Context("mapped to multiple external ports", func() {
 			var (
-				bbsClient   bbs.Client
-				processGuid string
+				bbsClient           bbs.Client
+				processGuid         string
+				externalPort1       int
+				externalPort2       int
+				sampleReceiverPort1 int
 			)
 
 			createDesiredLRPTwoExternalPorts := func(
@@ -268,10 +302,10 @@ var _ = Describe("Routing Test", func() {
 				bbsClient, bbsErr = helpers.GetBbsClient(routerApiConfig)
 				Expect(bbsErr).ToNot(HaveOccurred())
 
-				externalPort1 = 34500 + GinkgoParallelNode()
-				externalPort2 = 12300 + GinkgoParallelNode()
+				externalPort1 = nextExternalPort() + GinkgoParallelNode()
+				externalPort2 = nextExternalPort() + GinkgoParallelNode()
+				sampleReceiverPort1 = nextContainerPort() + GinkgoParallelNode()
 
-				sampleReceiverPort1 = 7000 + GinkgoParallelNode()
 				serverId1 = "serverId6"
 
 				lrp := createDesiredLRPTwoExternalPorts(
@@ -288,25 +322,28 @@ var _ = Describe("Routing Test", func() {
 			AfterEach(func() {
 				err := bbsClient.RemoveDesiredLRP(processGuid)
 				Expect(err).ShouldNot(HaveOccurred())
+				verifyPortClosed(externalPort1)
+				verifyPortClosed(externalPort2)
 			})
 
 			It("sends traffic on the different external ports to the same container port", func() {
-				verifyConnection(externalPort1, serverId1)
-				verifyConnection(externalPort2, serverId1)
+				verifyConnections(externalPort1, serverId1)
+				verifyConnections(externalPort2, serverId1)
 			})
 		})
 
 		Context("mapped to single external port", func() {
 			var (
-				bbsClient   bbs.Client
-				processGuid string
-				lrp         *models.DesiredLRP
+				bbsClient     bbs.Client
+				processGuid   string
+				lrp           *models.DesiredLRP
+				externalPort1 int
 			)
 			BeforeEach(func() {
 				var bbsErr error
 				bbsClient, bbsErr = helpers.GetBbsClient(routerApiConfig)
 				Expect(bbsErr).ToNot(HaveOccurred())
-				externalPort1 = 62000 + GinkgoParallelNode()
+				externalPort1 = nextExternalPort() + GinkgoParallelNode()
 			})
 
 			JustBeforeEach(func() {
@@ -318,11 +355,15 @@ var _ = Describe("Routing Test", func() {
 			AfterEach(func() {
 				err := bbsClient.RemoveDesiredLRP(processGuid)
 				Expect(err).ShouldNot(HaveOccurred())
+				verifyPortClosed(externalPort1)
 			})
 
 			Context("with one container port", func() {
+				var (
+					sampleReceiverPort1 int
+				)
 				BeforeEach(func() {
-					sampleReceiverPort1 = 8000 + GinkgoParallelNode()
+					sampleReceiverPort1 = nextContainerPort() + GinkgoParallelNode()
 					serverId1 = fmt.Sprintf("serverId-%d", GinkgoParallelNode())
 
 					containerPorts := []uint32{uint32(sampleReceiverPort1)}
@@ -338,23 +379,30 @@ var _ = Describe("Routing Test", func() {
 
 				It("receives TCP traffic on desired external port", func() {
 					oldExternalPort := externalPort1
-					verifyConnection(externalPort1, serverId1)
+					verifyConnections(externalPort1, serverId1)
 
 					By("updating LRP with new external port it receives traffic on new external port")
-					externalPort1 = 63000 + GinkgoParallelNode()
+					externalPort1 = nextExternalPort() + GinkgoParallelNode()
 					updatedLrp := helpers.UpdateDesiredLRP(uint32(externalPort1),
 						uint32(sampleReceiverPort1), 1)
 					err := bbsClient.UpdateDesiredLRP(processGuid, updatedLrp)
 					Expect(err).ShouldNot(HaveOccurred())
-					verifyConnection(externalPort1, serverId1)
-					Eventually(verifyPortClosed(oldExternalPort)).Should(BeTrue())
+					verifyConnections(externalPort1, serverId1)
+
+					verifyPortClosed(oldExternalPort)
 				})
 			})
 
 			Context("with multiple container ports", func() {
+				var (
+					externalPort1       int
+					sampleReceiverPort1 int
+					sampleReceiverPort2 int
+				)
 				BeforeEach(func() {
-					sampleReceiverPort1 = 8000 + GinkgoParallelNode()
-					sampleReceiverPort2 = 9000 + GinkgoParallelNode()
+					externalPort1 = nextExternalPort() + GinkgoParallelNode()
+					sampleReceiverPort1 = nextContainerPort() + GinkgoParallelNode()
+					sampleReceiverPort2 = nextContainerPort() + GinkgoParallelNode()
 					serverId1 = fmt.Sprintf("serverId-%d", GinkgoParallelNode())
 
 					containerPorts := []uint32{uint32(sampleReceiverPort1), uint32(sampleReceiverPort2)}
@@ -370,7 +418,7 @@ var _ = Describe("Routing Test", func() {
 
 				It("receives TCP traffic on desired external port", func() {
 					prefix := serverId1 + fmt.Sprintf("(0.0.0.0:%d)", sampleReceiverPort1)
-					verifyConnection(externalPort1, prefix)
+					verifyConnections(externalPort1, prefix)
 
 					By("updating LRP to map external port to different container port")
 					updatedLrp := helpers.UpdateDesiredLRP(uint32(externalPort1),
@@ -379,8 +427,7 @@ var _ = Describe("Routing Test", func() {
 					Expect(err).ShouldNot(HaveOccurred())
 
 					prefix = serverId1 + fmt.Sprintf("(0.0.0.0:%d)", sampleReceiverPort2)
-					verifyConnection(externalPort1, prefix)
-
+					verifyConnections(externalPort1, prefix)
 				})
 			})
 		})
