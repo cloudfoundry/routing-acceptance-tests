@@ -249,12 +249,14 @@ var _ = Describe("Routing Test", func() {
 				serverId string) *models.DesiredLRP {
 				containerPorts := []uint32{sampleReceiverPort1}
 				route1 := tcp_routes.TCPRoute{
-					ExternalPort:  externalPort1,
-					ContainerPort: sampleReceiverPort1,
+					RouterGroupGuid: "bad25cff-9332-48a6-8603-b619858e7992",
+					ExternalPort:    externalPort1,
+					ContainerPort:   sampleReceiverPort1,
 				}
 				route2 := tcp_routes.TCPRoute{
-					ExternalPort:  externalPort2,
-					ContainerPort: sampleReceiverPort1,
+					RouterGroupGuid: "bad25cff-9332-48a6-8603-b619858e7992",
+					ExternalPort:    externalPort2,
+					ContainerPort:   sampleReceiverPort1,
 				}
 				routes := tcp_routes.TCPRoutes{route1, route2}
 				lrp := helpers.CreateDesiredLRP(logger, containerPorts, routes, serverId1, 1)
@@ -325,8 +327,9 @@ var _ = Describe("Routing Test", func() {
 
 					containerPorts := []uint32{uint32(sampleReceiverPort1)}
 					route1 := tcp_routes.TCPRoute{
-						ExternalPort:  uint32(externalPort1),
-						ContainerPort: uint32(sampleReceiverPort1),
+						RouterGroupGuid: "bad25cff-9332-48a6-8603-b619858e7992",
+						ExternalPort:    uint32(externalPort1),
+						ContainerPort:   uint32(sampleReceiverPort1),
 					}
 
 					routes := tcp_routes.TCPRoutes{route1}
@@ -356,8 +359,9 @@ var _ = Describe("Routing Test", func() {
 
 					containerPorts := []uint32{uint32(sampleReceiverPort1), uint32(sampleReceiverPort2)}
 					route1 := tcp_routes.TCPRoute{
-						ExternalPort:  uint32(externalPort1),
-						ContainerPort: uint32(sampleReceiverPort1),
+						RouterGroupGuid: "bad25cff-9332-48a6-8603-b619858e7992",
+						ExternalPort:    uint32(externalPort1),
+						ContainerPort:   uint32(sampleReceiverPort1),
 					}
 
 					routes := tcp_routes.TCPRoutes{route1}

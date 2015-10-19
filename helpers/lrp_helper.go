@@ -88,8 +88,9 @@ func UpdateDesiredLRP(
 	externalPort, containerPort uint32,
 	instances int) *models.DesiredLRPUpdate {
 	route := tcp_routes.TCPRoute{
-		ExternalPort:  externalPort,
-		ContainerPort: containerPort,
+		RouterGroupGuid: "bad25cff-9332-48a6-8603-b619858e7992",
+		ExternalPort:    externalPort,
+		ContainerPort:   containerPort,
 	}
 	routes := tcp_routes.TCPRoutes{route}
 	numInstances := int32(instances)
