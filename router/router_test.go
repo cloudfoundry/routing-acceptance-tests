@@ -39,6 +39,23 @@ var _ = Describe("Routing Test", func() {
 		ROUTER_GROUP_1 = "rtr-grp-1"
 	)
 
+	isLRPRunning := func(bbsClient bbs.Client, processGuid string) bool {
+		actualLrps, err := bbsClient.ActualLRPGroupsByProcessGuid(processGuid)
+		if err != nil {
+			return false
+		}
+		return len(actualLrps) > 0 &&
+			actualLrps[0].Instance.State == models.ActualLRPStateRunning
+	}
+
+	isLRPRemoved := func(bbsClient bbs.Client, processGuid string) bool {
+		actualLrps, err := bbsClient.ActualLRPGroupsByProcessGuid(processGuid)
+		if err != nil {
+			return false
+		}
+		return len(actualLrps) == 0
+	}
+
 	getTcpRouteMappings := func(externalPort int, backendPorts ...int) []db.TcpRouteMapping {
 		tcpRouteMappings := make([]db.TcpRouteMapping, 0)
 
@@ -121,12 +138,20 @@ var _ = Describe("Routing Test", func() {
 	verifyPortClosedOnAddress := func(externalPort int, addr string) bool {
 		address := fmt.Sprintf("%s:%d", addr, externalPort)
 		conn, _ := net.DialTimeout(CONN_TYPE, address, DEFAULT_CONNECT_TIMEOUT)
+		defer func() {
+			if conn != nil {
+				conn.Close()
+			}
+		}()
 		return conn == nil
 	}
 
 	verifyPortClosed := func(port int) {
 		for _, address := range routerApiConfig.Addresses {
-			Eventually(verifyPortClosedOnAddress(port, address), "30s").Should(BeTrue())
+			Eventually(func() bool {
+				return verifyPortClosedOnAddress(port, address)
+			}, 30*time.Second, 5*time.Second).Should(BeTrue(),
+				fmt.Sprintf("port %d not closed", port))
 		}
 	}
 
@@ -317,13 +342,20 @@ var _ = Describe("Routing Test", func() {
 				err := bbsClient.DesireLRP(lrp)
 				Expect(err).ShouldNot(HaveOccurred())
 				processGuid = lrp.ProcessGuid
+				Eventually(func() bool {
+					return isLRPRunning(bbsClient, processGuid)
+				}, 30*time.Second, 1*time.Second).Should(BeTrue(), fmt.Sprintf("LRP (%s) not running", processGuid))
 			})
 
 			AfterEach(func() {
 				err := bbsClient.RemoveDesiredLRP(processGuid)
 				Expect(err).ShouldNot(HaveOccurred())
+				Eventually(func() bool {
+					return isLRPRemoved(bbsClient, processGuid)
+				}, 30*time.Second, 1*time.Second).Should(BeTrue())
 				verifyPortClosed(externalPort1)
 				verifyPortClosed(externalPort2)
+
 			})
 
 			It("sends traffic on the different external ports to the same container port", func() {
@@ -350,11 +382,17 @@ var _ = Describe("Routing Test", func() {
 				err := bbsClient.DesireLRP(lrp)
 				Expect(err).ShouldNot(HaveOccurred())
 				processGuid = lrp.ProcessGuid
+				Eventually(func() bool {
+					return isLRPRunning(bbsClient, processGuid)
+				}, 30*time.Second, 1*time.Second).Should(BeTrue(), fmt.Sprintf("LRP (%s) not running", processGuid))
 			})
 
 			AfterEach(func() {
 				err := bbsClient.RemoveDesiredLRP(processGuid)
 				Expect(err).ShouldNot(HaveOccurred())
+				Eventually(func() bool {
+					return isLRPRemoved(bbsClient, processGuid)
+				}, 30*time.Second, 1*time.Second).Should(BeTrue())
 				verifyPortClosed(externalPort1)
 			})
 
