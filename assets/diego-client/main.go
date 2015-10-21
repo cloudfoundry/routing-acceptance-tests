@@ -210,7 +210,7 @@ func handleCreate(bbsClient bbs.Client) {
 }
 
 func printJson(v interface{}) {
-	bytes, _ := json.Marshal(v)
+	bytes, _ := json.MarshalIndent(v, "", "  ")
 	fmt.Println(string(bytes))
 }
 
