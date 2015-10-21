@@ -35,9 +35,6 @@ var _ = Describe("Routing Test", func() {
 		receiver2 ifrit.Process
 	)
 
-	const (
-		ROUTER_GROUP_1 = "rtr-grp-1"
-	)
 
 	isLRPRunning := func(bbsClient bbs.Client, processGuid string) bool {
 		actualLrps, err := bbsClient.ActualLRPGroupsByProcessGuid(processGuid)
@@ -60,7 +57,7 @@ var _ = Describe("Routing Test", func() {
 		tcpRouteMappings := make([]db.TcpRouteMapping, 0)
 
 		for _, backendPort := range backendPorts {
-			tcpMapping := db.NewTcpRouteMapping(ROUTER_GROUP_1, uint16(externalPort), externalIP, uint16(backendPort))
+			tcpMapping := db.NewTcpRouteMapping(helpers.DefaultRouterGroupGuid, uint16(externalPort), externalIP, uint16(backendPort))
 			tcpRouteMappings = append(tcpRouteMappings, tcpMapping)
 		}
 		return tcpRouteMappings
