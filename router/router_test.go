@@ -35,7 +35,6 @@ var _ = Describe("Routing Test", func() {
 		receiver2 ifrit.Process
 	)
 
-
 	isLRPRunning := func(bbsClient bbs.Client, processGuid string) bool {
 		actualLrps, err := bbsClient.ActualLRPGroupsByProcessGuid(processGuid)
 		if err != nil {
@@ -220,9 +219,9 @@ var _ = Describe("Routing Test", func() {
 
 		Context("using routing api", func() {
 			BeforeEach(func() {
-				externalPort1 = nextExternalPort() + GinkgoParallelNode()
-				sampleReceiverPort1 = nextContainerPort() + GinkgoParallelNode()
-				sampleReceiverPort2 = nextContainerPort() + GinkgoParallelNode()
+				externalPort1 = nextExternalPort()
+				sampleReceiverPort1 = nextContainerPort()
+				sampleReceiverPort2 = nextContainerPort()
 				serverId1 = "serverId-1-routing-api"
 				serverId2 = "serverId-2-routing-api"
 
@@ -259,9 +258,9 @@ var _ = Describe("Routing Test", func() {
 
 		Context("using routing api", func() {
 			BeforeEach(func() {
-				externalPort1 = nextExternalPort() + GinkgoParallelNode()
-				sampleReceiverPort1 = nextContainerPort() + GinkgoParallelNode()
-				sampleReceiverPort2 = nextContainerPort() + GinkgoParallelNode()
+				externalPort1 = nextExternalPort()
+				sampleReceiverPort1 = nextContainerPort()
+				sampleReceiverPort2 = nextContainerPort()
 				serverId1 = "serverId-1-multiple-receivers-routing-api"
 				serverId2 = "serverId-2-multiple-receivers-routing-api"
 
@@ -324,9 +323,9 @@ var _ = Describe("Routing Test", func() {
 				bbsClient, bbsErr = helpers.GetBbsClient(routerApiConfig)
 				Expect(bbsErr).ToNot(HaveOccurred())
 
-				externalPort1 = nextExternalPort() + GinkgoParallelNode()
-				externalPort2 = nextExternalPort() + GinkgoParallelNode()
-				sampleReceiverPort1 = nextContainerPort() + GinkgoParallelNode()
+				externalPort1 = nextExternalPort()
+				externalPort2 = nextExternalPort()
+				sampleReceiverPort1 = nextContainerPort()
 
 				serverId1 = "serverId6"
 
@@ -372,7 +371,7 @@ var _ = Describe("Routing Test", func() {
 				var bbsErr error
 				bbsClient, bbsErr = helpers.GetBbsClient(routerApiConfig)
 				Expect(bbsErr).ToNot(HaveOccurred())
-				externalPort1 = nextExternalPort() + GinkgoParallelNode()
+				externalPort1 = nextExternalPort()
 			})
 
 			JustBeforeEach(func() {
@@ -398,7 +397,7 @@ var _ = Describe("Routing Test", func() {
 					sampleReceiverPort1 int
 				)
 				BeforeEach(func() {
-					sampleReceiverPort1 = nextContainerPort() + GinkgoParallelNode()
+					sampleReceiverPort1 = nextContainerPort()
 					serverId1 = fmt.Sprintf("serverId-%d", GinkgoParallelNode())
 
 					containerPorts := []uint32{uint32(sampleReceiverPort1)}
@@ -417,7 +416,7 @@ var _ = Describe("Routing Test", func() {
 					verifyConnections(externalPort1, serverId1)
 
 					By("updating LRP with new external port it receives traffic on new external port")
-					externalPort1 = nextExternalPort() + GinkgoParallelNode()
+					externalPort1 = nextExternalPort()
 					updatedLrp := helpers.UpdateDesiredLRP(uint32(externalPort1),
 						uint32(sampleReceiverPort1), 1)
 					err := bbsClient.UpdateDesiredLRP(processGuid, updatedLrp)
@@ -435,9 +434,9 @@ var _ = Describe("Routing Test", func() {
 					sampleReceiverPort2 int
 				)
 				BeforeEach(func() {
-					externalPort1 = nextExternalPort() + GinkgoParallelNode()
-					sampleReceiverPort1 = nextContainerPort() + GinkgoParallelNode()
-					sampleReceiverPort2 = nextContainerPort() + GinkgoParallelNode()
+					externalPort1 = nextExternalPort()
+					sampleReceiverPort1 = nextContainerPort()
+					sampleReceiverPort2 = nextContainerPort()
 					serverId1 = fmt.Sprintf("serverId-%d", GinkgoParallelNode())
 
 					containerPorts := []uint32{uint32(sampleReceiverPort1), uint32(sampleReceiverPort2)}
@@ -454,7 +453,6 @@ var _ = Describe("Routing Test", func() {
 				It("receives TCP traffic on desired external port", func() {
 					prefix := serverId1 + fmt.Sprintf("(0.0.0.0:%d)", sampleReceiverPort1)
 					verifyConnections(externalPort1, prefix)
-
 					By("updating LRP to map external port to different container port")
 					updatedLrp := helpers.UpdateDesiredLRP(uint32(externalPort1),
 						uint32(sampleReceiverPort2), 1)

@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 
 	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-golang/lager"
@@ -24,12 +25,17 @@ func TestRouter(t *testing.T) {
 	RunSpecs(t, "Router Suite")
 }
 
+const preallocatedExternalPorts = 100
+
 var (
 	sampleReceiverPath string
 	externalIP         string
 	routerApiConfig    helpers.RouterApiConfig
 	logger             lager.Logger
 	routingApiClient   routing_api.Client
+	externalPort       uint32
+	bucketSize         int
+	containerPort      uint32
 )
 
 func validateTcpRouteMapping(tcpRouteMapping db.TcpRouteMapping) bool {
@@ -52,16 +58,14 @@ func validateTcpRouteMapping(tcpRouteMapping db.TcpRouteMapping) bool {
 	return true
 }
 
-var externalPort uint32 = 60500
-
 func nextExternalPort() int {
-	return int(atomic.AddUint32(&externalPort, 100))
+	port := int(atomic.AddUint32(&externalPort, uint32(1))) + (GinkgoParallelNode()-1)*bucketSize
+	logger.Info("next-external-port", lager.Data{"ginkgo-parallel-node": GinkgoParallelNode(), "externalPort": port})
+	return port
 }
 
-var containerPort uint32 = 10500
-
 func nextContainerPort() int {
-	return int(atomic.AddUint32(&containerPort, 100))
+	return int(atomic.AddUint32(&containerPort, uint32(17+GinkgoParallelNode())))
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
@@ -99,7 +103,9 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	token, err := tokenFetcher.FetchToken()
 	Expect(err).ToNot(HaveOccurred())
 	routingApiClient.SetToken(token.AccessToken)
-
+	externalPort = 59999
+	containerPort = 5000
+	bucketSize = preallocatedExternalPorts / config.GinkgoConfig.ParallelTotal
 })
 
 var _ = SynchronizedAfterSuite(func() {
