@@ -11,6 +11,7 @@ import (
 
 type RouterApiConfig struct {
 	Addresses         []string     `json:"addresses"`
+	ElbAddress        string       `json:"elb_address"`
 	Port              uint16       `json:"port"`
 	BBSAddress        string       `json:"bbs_api_url,omitempty"`
 	BBSClientCertFile string       `json:"bbs_client_cert,omitempty"`

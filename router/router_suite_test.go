@@ -65,7 +65,9 @@ func nextExternalPort() int {
 }
 
 func nextContainerPort() int {
-	return int(atomic.AddUint32(&containerPort, uint32(17+GinkgoParallelNode())))
+	port := int(atomic.AddUint32(&containerPort, uint32(1))) + (GinkgoParallelNode()-1)*bucketSize
+	logger.Info("next-container-port", lager.Data{"ginkgo-parallel-node": GinkgoParallelNode(), "containerPort": port})
+	return port
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
