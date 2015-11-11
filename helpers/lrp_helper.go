@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/tcp-emitter/tcp_routes"
+	"github.com/cloudfoundry-incubator/routing-info/tcp_routes"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
