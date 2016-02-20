@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/cloudfoundry-incubator/bbs"
+	"github.com/nu7hatch/gouuid"
 )
 
 type RouterApiConfig struct {
@@ -19,6 +20,8 @@ type RouterApiConfig struct {
 	BBSCACertFile     string       `json:"bbs_ca_cert,omitempty"`
 	BBSRequireSSL     bool         `json:"bbs_require_ssl"`
 	RoutingApiUrl     string       `json:"routing_api_url"`
+	SystemDomain      string       `json:"system_domain"`
+	UseHttp           bool         `json:"use_http"`
 	OAuth             *OAuthConfig `json:"oauth"`
 }
 
@@ -113,4 +116,21 @@ func GetBbsClient(routerApiConfig RouterApiConfig) (bbs.Client, error) {
 		return nil, errors.New("invalid-scheme-in-bbs-address")
 	}
 	return bbsClient, nil
+}
+
+func (c RouterApiConfig) Protocol() string {
+	if c.UseHttp {
+		return "http://"
+	} else {
+		return "https://"
+	}
+}
+
+func RandomName() string {
+	guid, err := uuid.NewV4()
+	if err != nil {
+		panic(err)
+	}
+
+	return guid.String()
 }
