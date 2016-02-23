@@ -25,7 +25,7 @@ var _ = Describe("Registration", func() {
 		systemDomain = routerApiConfig.SystemDomain
 		oauthPassword = routerApiConfig.OAuth.ClientSecret
 		oauthUrl = routerApiConfig.Protocol() + "uaa." + systemDomain
-		routingApiEndpoint = routerApiConfig.Protocol() + "api." + systemDomain + "/routing"
+		routingApiEndpoint = routerApiConfig.Protocol() + "api." + systemDomain
 	})
 
 	Describe("HTTP Route", func() {
