@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gexec"
 
-	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/helpers"
+	"github.com/cloudfoundry-incubator/cf-router-acceptance-tests/helpers"
 
 	"testing"
 )

@@ -14,8 +14,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/bbs/models"
-	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/assets/tcp-sample-receiver/testrunner"
-	"github.com/cloudfoundry-incubator/cf-tcp-router-acceptance-tests/helpers"
+	"github.com/cloudfoundry-incubator/cf-router-acceptance-tests/assets/tcp-sample-receiver/testrunner"
+	"github.com/cloudfoundry-incubator/cf-router-acceptance-tests/helpers"
 	"github.com/cloudfoundry-incubator/routing-api/db"
 	"github.com/cloudfoundry-incubator/routing-info/tcp_routes"
 )
