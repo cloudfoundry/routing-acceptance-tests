@@ -1,6 +1,8 @@
 package routing_api
 
 import (
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-router-acceptance-tests/helpers"
@@ -12,7 +14,6 @@ import (
 
 var _ = Describe("Registration", func() {
 	var (
-		systemDomain       string
 		oauthPassword      string
 		oauthUrl           string
 		routingApiEndpoint string
@@ -22,10 +23,9 @@ var _ = Describe("Registration", func() {
 	)
 
 	BeforeEach(func() {
-		systemDomain = routerApiConfig.SystemDomain
 		oauthPassword = routerApiConfig.OAuth.ClientSecret
-		oauthUrl = routerApiConfig.Protocol() + "uaa." + systemDomain
-		routingApiEndpoint = routerApiConfig.Protocol() + "api." + systemDomain
+		oauthUrl = routerApiConfig.OAuth.TokenEndpoint
+		routingApiEndpoint = routerApiConfig.RoutingApiUrl
 	})
 
 	Describe("HTTP Route", func() {
@@ -46,7 +46,12 @@ var _ = Describe("Registration", func() {
 		It("can register, list, subscribe to sse and unregister routes", func() {
 			args := []string{"events", "--http", "--api", routingApiEndpoint, "--client-id", "tcp_emitter", "--client-secret", oauthPassword, "--oauth-url", oauthUrl}
 			eventsSession = Rtr(args...)
-			Eventually(eventsSession.Out, 70*time.Second).Should(Say("api." + systemDomain))
+			routingHostPort, err := url.Parse(routingApiEndpoint)
+			urlParts := strings.Split(routingHostPort.Host, ":")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(urlParts).To(HaveLen(2))
+			expectedPort := "\"" + "port" + "\"" + ":" + urlParts[1]
+			Eventually(eventsSession.Out, 70*time.Second).Should(Say(expectedPort))
 
 			args = []string{"register", routeJSON, "--api", routingApiEndpoint, "--client-id", "tcp_emitter", "--client-secret", oauthPassword, "--oauth-url", oauthUrl}
 			session := Rtr(args...)

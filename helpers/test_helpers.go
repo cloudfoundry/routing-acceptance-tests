@@ -20,7 +20,6 @@ type RouterApiConfig struct {
 	BBSCACertFile     string       `json:"bbs_ca_cert,omitempty"`
 	BBSRequireSSL     bool         `json:"bbs_require_ssl"`
 	RoutingApiUrl     string       `json:"routing_api_url"`
-	SystemDomain      string       `json:"system_domain"`
 	UseHttp           bool         `json:"use_http"`
 	OAuth             *OAuthConfig `json:"oauth"`
 }

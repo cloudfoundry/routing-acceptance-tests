@@ -34,7 +34,6 @@ func TestRouting(t *testing.T) {
 	routerApiConfig = helpers.LoadConfig()
 
 	BeforeSuite(func() {
-		Expect(routerApiConfig.SystemDomain).ToNot(Equal(""), "Must provide a system domain for the routing suite")
 		Expect(routerApiConfig.OAuth.ClientSecret).ToNot(Equal(""), "Must provide a client secret for the routing suite")
 	})
 
