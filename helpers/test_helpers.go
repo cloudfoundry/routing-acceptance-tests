@@ -19,6 +19,7 @@ type RouterApiConfig struct {
 	BBSClientKeyFile  string       `json:"bbs_client_key,omitempty"`
 	BBSCACertFile     string       `json:"bbs_ca_cert,omitempty"`
 	BBSRequireSSL     bool         `json:"bbs_require_ssl"`
+	SystemDomain      string       `json:"system_domain"`
 	RoutingApiUrl     string       `json:"routing_api_url"`
 	UseHttp           bool         `json:"use_http"`
 	OAuth             *OAuthConfig `json:"oauth"`
@@ -57,7 +58,7 @@ func LoadConfig() RouterApiConfig {
 	}
 
 	if loadedConfig.RoutingApiUrl == "" {
-		loadedConfig.RoutingApiUrl = DEFAULT_ROUTING_API_URL
+		loadedConfig.RoutingApiUrl = loadedConfig.Protocol() + "api." + loadedConfig.SystemDomain
 	}
 
 	if loadedConfig.BBSRequireSSL &&

@@ -1,8 +1,6 @@
 package routing_api
 
 import (
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-router-acceptance-tests/helpers"
@@ -24,8 +22,8 @@ var _ = Describe("Registration", func() {
 
 	BeforeEach(func() {
 		oauthPassword = routerApiConfig.OAuth.ClientSecret
-		oauthUrl = routerApiConfig.OAuth.TokenEndpoint
 		routingApiEndpoint = routerApiConfig.RoutingApiUrl
+		oauthUrl = routerApiConfig.OAuth.TokenEndpoint
 	})
 
 	Describe("HTTP Route", func() {
@@ -46,12 +44,8 @@ var _ = Describe("Registration", func() {
 		It("can register, list, subscribe to sse and unregister routes", func() {
 			args := []string{"events", "--http", "--api", routingApiEndpoint, "--client-id", "tcp_emitter", "--client-secret", oauthPassword, "--oauth-url", oauthUrl}
 			eventsSession = Rtr(args...)
-			routingHostPort, err := url.Parse(routingApiEndpoint)
-			urlParts := strings.Split(routingHostPort.Host, ":")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(urlParts).To(HaveLen(2))
-			expectedPort := "\"" + "port" + "\"" + ":" + urlParts[1]
-			Eventually(eventsSession.Out, 70*time.Second).Should(Say(expectedPort))
+			Eventually(eventsSession.Out, 70*time.Second).Should(Say("port"))
+			Eventually(eventsSession.Out, 70*time.Second).Should(Say("route"))
 
 			args = []string{"register", routeJSON, "--api", routingApiEndpoint, "--client-id", "tcp_emitter", "--client-secret", oauthPassword, "--oauth-url", oauthUrl}
 			session := Rtr(args...)

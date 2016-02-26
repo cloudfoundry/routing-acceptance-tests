@@ -25,7 +25,7 @@ cat > router_config.json <<EOF
   "bbs_client_cert": "/path/to/bbs/client.crt",
   "bbs_client_key": "/path/to/bbs/client.key",
   "bbs_ca_cert": "/path/to/bbs/ca_cert.crt",
-  "routing_api_url": "http://10.244.0.134:3000",
+  "routing_api_url": "http://10.244.8.10:3000",
   "oauth": {
     "token_endpoint": "http://uaa.bosh-lite.com",
     "client_name": "gorouter",
