@@ -35,6 +35,7 @@ func TestRouting(t *testing.T) {
 
 	BeforeSuite(func() {
 		Expect(routerApiConfig.OAuth.ClientSecret).ToNot(Equal(""), "Must provide a client secret for the routing suite")
+		Expect(routerApiConfig.RoutingApiUrl).ToNot(Equal(""), "Must provide either routing_api_url or system_domain for the routing suite")
 	})
 
 	RunSpecs(t, "Routing API Suite")

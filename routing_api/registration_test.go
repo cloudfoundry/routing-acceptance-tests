@@ -1,6 +1,7 @@
 package routing_api
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-router-acceptance-tests/helpers"
@@ -23,7 +24,8 @@ var _ = Describe("Registration", func() {
 	BeforeEach(func() {
 		oauthPassword = routerApiConfig.OAuth.ClientSecret
 		routingApiEndpoint = routerApiConfig.RoutingApiUrl
-		oauthUrl = routerApiConfig.OAuth.TokenEndpoint
+		portString := strconv.Itoa(routerApiConfig.OAuth.Port)
+		oauthUrl = routerApiConfig.OAuth.TokenEndpoint + ":" + portString
 	})
 
 	Describe("HTTP Route", func() {

@@ -33,8 +33,7 @@ type OAuthConfig struct {
 }
 
 const (
-	DEFAULT_BBS_API_URL     = "http://bbs.service.cf.internal:8889"
-	DEFAULT_ROUTING_API_URL = "http://routing-api.service.cf.internal:3000"
+	DEFAULT_BBS_API_URL = "http://bbs.service.cf.internal:8889"
 )
 
 func LoadConfig() RouterApiConfig {
@@ -57,6 +56,9 @@ func LoadConfig() RouterApiConfig {
 		loadedConfig.BBSAddress = DEFAULT_BBS_API_URL
 	}
 
+	if loadedConfig.RoutingApiUrl == "" && loadedConfig.SystemDomain == "" {
+		panic("Need to set either routing_api_url or system_domain")
+	}
 	if loadedConfig.RoutingApiUrl == "" {
 		loadedConfig.RoutingApiUrl = loadedConfig.Protocol() + "api." + loadedConfig.SystemDomain
 	}

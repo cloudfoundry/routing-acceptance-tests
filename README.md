@@ -38,7 +38,9 @@ export ROUTER_API_CONFIG=$PWD/router_config.json
 ```
 BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-router-acceptance-tests/assets/desired_lrp_client/config`. Replace `router_config.json` bbs certificate fields with absolute path of certificate files.
 
-Note that IP `10.24.0.134` is IP address of `api_z1/0` job in cf release. If this IP address happens to be different in your cf release then change the entry accordingly.
+Note:
+- IP `10.24.8.10` is IP address of `routing_api_z1/0` job in cf-routing-release. If this IP address happens to be different in your cf release then change the entry accordingly.
+- IP `10.24.8.2` is IP address of `tcp_router_z1/0` job in cf-routing-release.
 
 Make following entry in `/etc/hosts` file
 ```
@@ -51,5 +53,5 @@ Note that IP `10.244.16.130` is IP address of `database_z1/0` job in diego relea
 After correctly setting the `ROUTER_API_CONFIG` environment variable, the following command will run the tests:
 
 ```
-    ginkgo -r -nodes=3 router
+    ./bin/test
 ```
