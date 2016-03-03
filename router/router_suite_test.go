@@ -15,7 +15,7 @@ import (
 
 	"testing"
 
-	"github.com/cloudfoundry-incubator/cf-router-acceptance-tests/helpers"
+	"github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/helpers"
 	"github.com/cloudfoundry-incubator/cf-tcp-router/testutil"
 	"github.com/cloudfoundry-incubator/routing-api"
 	"github.com/cloudfoundry-incubator/routing-api/db"
@@ -75,7 +75,7 @@ func nextContainerPort() int {
 var _ = SynchronizedBeforeSuite(func() []byte {
 	cleanupRoutes(lagertest.NewTestLogger("cleanup"))
 
-	sampleReceiver, err := gexec.Build("github.com/cloudfoundry-incubator/cf-router-acceptance-tests/assets/tcp-sample-receiver", "-race")
+	sampleReceiver, err := gexec.Build("github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/tcp-sample-receiver", "-race")
 	Expect(err).NotTo(HaveOccurred())
 	payload, err := json.Marshal(map[string]string{
 		"sample-receiver": sampleReceiver,

@@ -15,7 +15,7 @@ The following commands will create a config file `router_config.json` for a [bos
 
 
 ```bash
-cd ~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-router-acceptance-tests/
+cd ~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/
 cat > router_config.json <<EOF
 {
   "addresses": ["10.244.8.2"],
@@ -36,7 +36,7 @@ cat > router_config.json <<EOF
 EOF
 export ROUTER_API_CONFIG=$PWD/router_config.json
 ```
-BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-router-acceptance-tests/assets/desired_lrp_client/config`. Replace `router_config.json` bbs certificate fields with absolute path of certificate files.
+BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/desired_lrp_client/config`. Replace `router_config.json` bbs certificate fields with absolute path of certificate files.
 
 Note:
 - IP `10.24.8.10` is IP address of `routing_api_z1/0` job in cf-routing-release. If this IP address happens to be different in your cf release then change the entry accordingly.

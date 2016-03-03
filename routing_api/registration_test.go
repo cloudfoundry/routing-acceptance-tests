@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cloudfoundry-incubator/cf-router-acceptance-tests/helpers"
+	"github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
