@@ -2,9 +2,12 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync/atomic"
 	"time"
 
+	uaaclient "github.com/cloudfoundry-incubator/uaa-go-client"
+	uaaconfig "github.com/cloudfoundry-incubator/uaa-go-client/config"
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
@@ -19,7 +22,6 @@ import (
 	"github.com/cloudfoundry-incubator/cf-tcp-router/testutil"
 	"github.com/cloudfoundry-incubator/routing-api"
 	"github.com/cloudfoundry-incubator/routing-api/db"
-	"github.com/cloudfoundry-incubator/uaa-token-fetcher"
 )
 
 func TestRouter(t *testing.T) {
@@ -89,18 +91,19 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 
 	err := json.Unmarshal(payload, &context)
 	Expect(err).NotTo(HaveOccurred())
-	logger = lagertest.NewTestLogger("test")
 	sampleReceiverPath = context["sample-receiver"]
 	externalIP = testutil.GetExternalIP()
+
 	routerApiConfig = helpers.LoadConfig()
 
 	routingApiClient = routing_api.NewClient(routerApiConfig.RoutingApiUrl)
 
-	tokenFetcher, err := createTokenFetcher(logger, routerApiConfig)
+	logger = lagertest.NewTestLogger("test")
+
+	uaaClient := newUaaClient(routerApiConfig, logger)
+	token, err := uaaClient.FetchToken(true)
 	Expect(err).ToNot(HaveOccurred())
 
-	token, err := tokenFetcher.FetchToken(true)
-	Expect(err).ToNot(HaveOccurred())
 	routingApiClient.SetToken(token.AccessToken)
 	externalPort = 59999
 	containerPort = 5000
@@ -112,15 +115,40 @@ var _ = SynchronizedAfterSuite(func() {
 	gexec.CleanupBuildArtifacts()
 })
 
+func newUaaClient(routerApiConfig helpers.RouterApiConfig, logger lager.Logger) uaaclient.Client {
+
+	tokenURL := fmt.Sprintf("%s:%d", routerApiConfig.OAuth.TokenEndpoint, routerApiConfig.OAuth.Port)
+
+	cfg := &uaaconfig.Config{
+		UaaEndpoint:           tokenURL,
+		SkipVerification:      routerApiConfig.OAuth.SkipOAuthTLSVerification,
+		ClientName:            routerApiConfig.OAuth.ClientName,
+		ClientSecret:          routerApiConfig.OAuth.ClientSecret,
+		MaxNumberOfRetries:    3,
+		RetryInterval:         500 * time.Millisecond,
+		ExpirationBufferInSec: 30,
+	}
+
+	klok := clock.NewClock()
+
+	uaaClient, err := uaaclient.NewClient(logger, cfg, klok)
+	Expect(err).ToNot(HaveOccurred())
+
+	_, err = uaaClient.FetchToken(true)
+	Expect(err).ToNot(HaveOccurred())
+
+	return uaaClient
+}
+
 func cleanupRoutes(logger lager.Logger) {
 	routerApiConfig := helpers.LoadConfig()
 	routingApiClient := routing_api.NewClient(routerApiConfig.RoutingApiUrl)
 
-	tokenFetcher, err := createTokenFetcher(logger, routerApiConfig)
+	uaaClient := newUaaClient(routerApiConfig, logger)
+
+	token, err := uaaClient.FetchToken(true)
 	Expect(err).ToNot(HaveOccurred())
 
-	token, err := tokenFetcher.FetchToken(true)
-	Expect(err).ToNot(HaveOccurred())
 	routingApiClient.SetToken(token.AccessToken)
 
 	// Cleaning up all the pre-existing routes.
@@ -134,23 +162,4 @@ func cleanupRoutes(logger lager.Logger) {
 	}
 	err = routingApiClient.DeleteTcpRouteMappings(deleteTcpRouteMappings)
 	Expect(err).ToNot(HaveOccurred())
-}
-
-func createTokenFetcher(logger lager.Logger, routerApiConfig helpers.RouterApiConfig) (token_fetcher.TokenFetcher, error) {
-	oauth := token_fetcher.OAuthConfig{
-		TokenEndpoint: routerApiConfig.OAuth.TokenEndpoint,
-		ClientName:    routerApiConfig.OAuth.ClientName,
-		ClientSecret:  routerApiConfig.OAuth.ClientSecret,
-		Port:          routerApiConfig.OAuth.Port,
-	}
-	clock := clock.NewClock()
-
-	logger.Debug("creating-uaa-token-fetcher")
-
-	tokenFetcherConfig := token_fetcher.TokenFetcherConfig{
-		MaxNumberOfRetries:   uint32(3),
-		RetryInterval:        5 * time.Second,
-		ExpirationBufferTime: int64(30),
-	}
-	return token_fetcher.NewTokenFetcher(logger, &oauth, tokenFetcherConfig, clock)
 }

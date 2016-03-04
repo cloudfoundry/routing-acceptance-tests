@@ -26,10 +26,11 @@ type RouterApiConfig struct {
 }
 
 type OAuthConfig struct {
-	TokenEndpoint string `json:"token_endpoint"`
-	ClientName    string `json:"client_name"`
-	ClientSecret  string `json:"client_secret"`
-	Port          int    `json:"port"`
+	TokenEndpoint            string `json:"token_endpoint"`
+	ClientName               string `json:"client_name"`
+	ClientSecret             string `json:"client_secret"`
+	Port                     int    `json:"port"`
+	SkipOAuthTLSVerification bool   `json:"skip_oauth_tls_verification"`
 }
 
 const (
