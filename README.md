@@ -26,12 +26,12 @@ cat > router_config.json <<EOF
   "bbs_client_key": "/path/to/bbs/client.key",
   "bbs_ca_cert": "/path/to/bbs/ca_cert.crt",
   "routing_api_url": "http://api.bosh-lite.com",
-  "skip_oauth_tls_verification": true,
   "oauth": {
     "token_endpoint": "http://uaa.bosh-lite.com",
     "client_name": "tcp_emitter",
     "client_secret": "tcp-emitter-secret",
     "port": 80
+    "skip_oauth_tls_verification": true,
   }
 }
 EOF
