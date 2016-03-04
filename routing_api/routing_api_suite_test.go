@@ -14,6 +14,9 @@ import (
 )
 
 func Rtr(args ...string) *Session {
+	if routerApiConfig.OAuth.SkipOAuthTLSVerification {
+		args = append(args, "--skip-oauth-tls-verification")
+	}
 	session, err := Start(exec.Command("rtr", args...), GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 
