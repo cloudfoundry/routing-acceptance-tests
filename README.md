@@ -8,18 +8,23 @@ This test suite exercises [Router](https://github.com/cloudfoundry-incubator/cf-
 
 To run the Router Acceptance tests, you will need:
 - a running router deployment
-- make sure that all the dependencies of this module are installed in your GOPATH (alternatively if you have cloned the [cf-routing-release](https://github.com/cloudfoundry-incubator/cf-routing-release) make sure that your GOPATH is set to root directory of cf-routing-release)
 - an environment variable `ROUTER_API_CONFIG` which points to a `.json` file that contains the router api endpoint
+- make sure that your GOPATH is set to root directory of [cf-routing-release](https://github.com/cloudfoundry-incubator/cf-routing-release) 
+```bash
+git clone https://github.com/cloudfoundry-incubator/cf-routing-release.git
+cd cf-routing-release
+./scripts/update
+source .envrc
+```
 
-The following commands will create a config file `router_config.json` for a [bosh-lite](https://github.com/cloudfoundry/bosh-lite) installation and set the `ROUTER_API_CONFIG` environment variable to the path for this file. Edit `router_config.json` as appropriate for your environment.
+The following commands will create a config file `integration_config.json` for a [bosh-lite](https://github.com/cloudfoundry/bosh-lite) installation and set the `ROUTER_API_CONFIG` environment variable to the path for this file. Edit `integration_config.json` as appropriate for your environment.
 
 
 ```bash
 cd ~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/
-cat > router_config.json <<EOF
+cat > integration_config.json <<EOF
 {
   "addresses": ["10.244.8.2"],
-  "port": 9999,
   "bbs_api_url": "https://bbs.service.cf.internal:8889",
   "bbs_require_ssl": true,
   "bbs_client_cert": "/path/to/bbs/client.crt",
@@ -35,9 +40,11 @@ cat > router_config.json <<EOF
   }
 }
 EOF
-export ROUTER_API_CONFIG=$PWD/router_config.json
+export ROUTER_API_CONFIG=$PWD/integration_config.json
 ```
-BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/desired_lrp_client/config`. Replace `router_config.json` bbs certificate fields with absolute path of certificate files.
+The `addresses` property contains the IP addresses of the TCP Routers.
+
+BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/desired_lrp_client/config`. Replace `integration_config.json` bbs certificate fields with absolute path of certificate files.
 
 Note:
 - IP `10.24.8.10` is IP address of `routing_api_z1/0` job in cf-routing-release. If this IP address happens to be different in your cf release then change the entry accordingly.
