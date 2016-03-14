@@ -33,6 +33,8 @@ var _ = Describe("Routing Test", func() {
 
 		receiver1 ifrit.Process
 		receiver2 ifrit.Process
+
+		routerGroupGuid string
 	)
 
 	isLRPRunning := func(bbsClient bbs.Client, processGuid string) bool {
@@ -56,7 +58,7 @@ var _ = Describe("Routing Test", func() {
 		tcpRouteMappings := make([]apimodels.TcpRouteMapping, 0)
 
 		for _, backendPort := range backendPorts {
-			tcpMapping := apimodels.NewTcpRouteMapping(helpers.DefaultRouterGroupGuid, uint16(externalPort), externalIP, uint16(backendPort))
+			tcpMapping := apimodels.NewTcpRouteMapping(routerGroupGuid, uint16(externalPort), externalIP, uint16(backendPort))
 			tcpRouteMappings = append(tcpRouteMappings, tcpMapping)
 		}
 		return tcpRouteMappings
@@ -216,6 +218,20 @@ var _ = Describe("Routing Test", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 	}
 
+	BeforeEach(func() {
+		routerGroups, err := routingApiClient.RouterGroups()
+		Expect(err).ToNot(HaveOccurred())
+		Expect(routerGroups).ToNot(HaveLen(0))
+
+		for _, rg := range routerGroups {
+			if rg.Type == "tcp" {
+				routerGroupGuid = rg.Guid
+				break
+			}
+		}
+		Expect(routerGroupGuid).ToNot(BeNil())
+	})
+
 	Describe("A sample receiver running as a separate process", func() {
 		var (
 			externalPort1       int
@@ -311,12 +327,12 @@ var _ = Describe("Routing Test", func() {
 				serverId string) *models.DesiredLRP {
 				containerPorts := []uint32{sampleReceiverPort1}
 				route1 := tcp_routes.TCPRoute{
-					RouterGroupGuid: "bad25cff-9332-48a6-8603-b619858e7992",
+					RouterGroupGuid: routerGroupGuid,
 					ExternalPort:    externalPort1,
 					ContainerPort:   sampleReceiverPort1,
 				}
 				route2 := tcp_routes.TCPRoute{
-					RouterGroupGuid: "bad25cff-9332-48a6-8603-b619858e7992",
+					RouterGroupGuid: routerGroupGuid,
 					ExternalPort:    externalPort2,
 					ContainerPort:   sampleReceiverPort1,
 				}
@@ -412,7 +428,7 @@ var _ = Describe("Routing Test", func() {
 
 					containerPorts := []uint32{uint32(sampleReceiverPort1)}
 					route1 := tcp_routes.TCPRoute{
-						RouterGroupGuid: "bad25cff-9332-48a6-8603-b619858e7992",
+						RouterGroupGuid: routerGroupGuid,
 						ExternalPort:    uint32(externalPort1),
 						ContainerPort:   uint32(sampleReceiverPort1),
 					}
@@ -429,7 +445,7 @@ var _ = Describe("Routing Test", func() {
 					By("updating LRP with new external port it receives traffic on new external port")
 					externalPort1 = nextExternalPort()
 					updatedLrp := helpers.UpdateDesiredLRP(uint32(externalPort1),
-						uint32(sampleReceiverPort1), 1)
+						uint32(sampleReceiverPort1), 1, routerGroupGuid)
 					err := bbsClient.UpdateDesiredLRP(processGuid, updatedLrp)
 					Expect(err).ShouldNot(HaveOccurred())
 					verifyConnections(externalPort1, serverId1)
@@ -453,7 +469,7 @@ var _ = Describe("Routing Test", func() {
 
 					containerPorts := []uint32{uint32(sampleReceiverPort1), uint32(sampleReceiverPort2)}
 					route1 := tcp_routes.TCPRoute{
-						RouterGroupGuid: "bad25cff-9332-48a6-8603-b619858e7992",
+						RouterGroupGuid: routerGroupGuid,
 						ExternalPort:    uint32(externalPort1),
 						ContainerPort:   uint32(sampleReceiverPort1),
 					}
@@ -469,7 +485,7 @@ var _ = Describe("Routing Test", func() {
 
 					By("updating LRP to map external port to different container port")
 					updatedLrp := helpers.UpdateDesiredLRP(uint32(externalPort1),
-						uint32(sampleReceiverPort2), 1)
+						uint32(sampleReceiverPort2), 1, routerGroupGuid)
 					err := bbsClient.UpdateDesiredLRP(processGuid, updatedLrp)
 					Expect(err).ShouldNot(HaveOccurred())
 

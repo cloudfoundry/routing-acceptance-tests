@@ -10,10 +10,6 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-const (
-	DefaultRouterGroupGuid = "bad25cff-9332-48a6-8603-b619858e7992"
-)
-
 func CreateDesiredLRP(
 	logger lager.Logger, containerPorts []uint32,
 	routes tcp_routes.TCPRoutes, serverId string,
@@ -90,9 +86,9 @@ func CreateDesiredLRP(
 
 func UpdateDesiredLRP(
 	externalPort, containerPort uint32,
-	instances int) *models.DesiredLRPUpdate {
+	instances int, routerGroupGuid string) *models.DesiredLRPUpdate {
 	route := tcp_routes.TCPRoute{
-		RouterGroupGuid: DefaultRouterGroupGuid,
+		RouterGroupGuid: routerGroupGuid,
 		ExternalPort:    externalPort,
 		ContainerPort:   containerPort,
 	}
