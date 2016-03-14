@@ -16,7 +16,7 @@ import (
 	"github.com/cloudfoundry-incubator/bbs/models"
 	"github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/tcp-sample-receiver/testrunner"
 	"github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/helpers"
-	"github.com/cloudfoundry-incubator/routing-api/db"
+	apimodels "github.com/cloudfoundry-incubator/routing-api/models"
 	"github.com/cloudfoundry-incubator/routing-info/tcp_routes"
 )
 
@@ -52,11 +52,11 @@ var _ = Describe("Routing Test", func() {
 		return len(actualLrps) == 0
 	}
 
-	getTcpRouteMappings := func(externalPort int, backendPorts ...int) []db.TcpRouteMapping {
-		tcpRouteMappings := make([]db.TcpRouteMapping, 0)
+	getTcpRouteMappings := func(externalPort int, backendPorts ...int) []apimodels.TcpRouteMapping {
+		tcpRouteMappings := make([]apimodels.TcpRouteMapping, 0)
 
 		for _, backendPort := range backendPorts {
-			tcpMapping := db.NewTcpRouteMapping(helpers.DefaultRouterGroupGuid, uint16(externalPort), externalIP, uint16(backendPort))
+			tcpMapping := apimodels.NewTcpRouteMapping(helpers.DefaultRouterGroupGuid, uint16(externalPort), externalIP, uint16(backendPort))
 			tcpRouteMappings = append(tcpRouteMappings, tcpMapping)
 		}
 		return tcpRouteMappings

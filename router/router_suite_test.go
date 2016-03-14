@@ -21,7 +21,7 @@ import (
 	"github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/helpers"
 	"github.com/cloudfoundry-incubator/cf-tcp-router/testutil"
 	"github.com/cloudfoundry-incubator/routing-api"
-	"github.com/cloudfoundry-incubator/routing-api/db"
+	"github.com/cloudfoundry-incubator/routing-api/models"
 )
 
 func TestRouter(t *testing.T) {
@@ -42,7 +42,7 @@ var (
 	containerPort      uint32
 )
 
-func validateTcpRouteMapping(tcpRouteMapping db.TcpRouteMapping) bool {
+func validateTcpRouteMapping(tcpRouteMapping models.TcpRouteMapping) bool {
 	if tcpRouteMapping.TcpRoute.RouterGroupGuid == "" {
 		return false
 	}
@@ -154,7 +154,7 @@ func cleanupRoutes(logger lager.Logger) {
 	// Cleaning up all the pre-existing routes.
 	tcpRouteMappings, err := routingApiClient.TcpRouteMappings()
 	Expect(err).ToNot(HaveOccurred())
-	deleteTcpRouteMappings := make([]db.TcpRouteMapping, 0)
+	deleteTcpRouteMappings := make([]models.TcpRouteMapping, 0)
 	for _, tcpRouteMapping := range tcpRouteMappings {
 		if validateTcpRouteMapping(tcpRouteMapping) {
 			deleteTcpRouteMappings = append(deleteTcpRouteMappings, tcpRouteMapping)
