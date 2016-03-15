@@ -33,7 +33,7 @@ const (
 	DEFAULT_MEMORY_LIMIT = "256M"
 )
 
-var routerApiConfig helpers.RouterApiConfig
+var routerApiConfig helpers.RoutingConfig
 
 func TestRouting(t *testing.T) {
 	RegisterFailHandler(Fail)

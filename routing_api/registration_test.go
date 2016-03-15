@@ -39,7 +39,7 @@ var _ = Describe("Registration", func() {
 
 			args = []string{"register", routeJSON}
 			session := Rtr(args...)
-			Eventually(session.Out).Should(Say("Successfully registered routes"))
+			Eventually(session.Out, "5s", "1s").Should(Say("Successfully registered routes"))
 			Eventually(eventsSession.Out, 10*time.Second).Should(Say(route))
 			Eventually(eventsSession.Out).Should(Say(`"port":65340`))
 			Eventually(eventsSession.Out).Should(Say(`"ip":"1.2.3.4"`))
@@ -54,7 +54,7 @@ var _ = Describe("Registration", func() {
 			args = []string{"unregister", routeJSON}
 			session = Rtr(args...)
 
-			Eventually(session.Out).Should(Say("Successfully unregistered routes"))
+			Eventually(session.Out, "5s", "1s").Should(Say("Successfully unregistered routes"))
 
 			args = []string{"list"}
 			session = Rtr(args...)

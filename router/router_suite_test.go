@@ -34,7 +34,7 @@ const preallocatedExternalPorts = 100
 var (
 	sampleReceiverPath string
 	externalIP         string
-	routerApiConfig    helpers.RouterApiConfig
+	routerApiConfig    helpers.RoutingConfig
 	logger             lager.Logger
 	routingApiClient   routing_api.Client
 	externalPort       uint32
@@ -115,7 +115,7 @@ var _ = SynchronizedAfterSuite(func() {
 	gexec.CleanupBuildArtifacts()
 })
 
-func newUaaClient(routerApiConfig helpers.RouterApiConfig, logger lager.Logger) uaaclient.Client {
+func newUaaClient(routerApiConfig helpers.RoutingConfig, logger lager.Logger) uaaclient.Client {
 
 	tokenURL := fmt.Sprintf("%s:%d", routerApiConfig.OAuth.TokenEndpoint, routerApiConfig.OAuth.Port)
 

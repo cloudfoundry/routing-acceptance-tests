@@ -1,4 +1,4 @@
-# Router Acceptance Tests
+# Routing Acceptance Tests
 
 This test suite exercises [Cloud Foundry Routing](https://github.com/cloudfoundry-incubator/cf-routing-release) deployment.
 
@@ -6,7 +6,7 @@ This test suite exercises [Cloud Foundry Routing](https://github.com/cloudfoundr
 
 ### Test setup
 
-To run the Router Acceptance tests, you will need:
+To run the Routing Acceptance tests, you will need:
 - a running cf-routing-release deployment
 - an environment variable `CONFIG` which points to a `.json` file that contains the router api endpoint
 - make sure that your GOPATH is set to root directory of [cf-routing-release](https://github.com/cloudfoundry-incubator/cf-routing-release) 
@@ -25,12 +25,17 @@ cd ~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routi
 cat > integration_config.json <<EOF
 {
   "addresses": ["10.244.14.2"],
+  "api": "api.bosh-lite.com",
+  "admin_user": "admin",
+  "admin_password": "admin",
+  "skip_ssl_validation": true,
+  "use_http":true,
+  "apps_domain": "bosh-lite.com",
   "bbs_api_url": "https://bbs.service.cf.internal:8889",
   "bbs_require_ssl": true,
   "bbs_client_cert": "/path/to/bbs/client.crt",
   "bbs_client_key": "/path/to/bbs/client.key",
   "bbs_ca_cert": "/path/to/bbs/ca_cert.crt",
-  "routing_api_url": "http://api.bosh-lite.com",
   "oauth": {
     "token_endpoint": "https://uaa.bosh-lite.com",
     "client_name": "tcp_emitter",
@@ -42,15 +47,17 @@ cat > integration_config.json <<EOF
 EOF
 export CONFIG=$PWD/integration_config.json
 ```
-The `addresses` property contains the IP addresses of the TCP Routers.
+
+Note:
+- IP `10.24.14.2` is IP address of `tcp_router_z1/0` job in cf-routing-release. If this IP address happens to be different in your cf release then change the entry accordingly.
+- `admin_user` and `admin_password` properties refer to the admin user used to perform a CF login with the cf CLI.
+- `skip_ssl_validation` is used for the cf CLI when targeting an environment.
+- All `bbs_*` properties are only required if running the `router` test package.
+- The `addresses` property contains the IP addresses of the TCP Routers and/or the Load Balancer's IP address.
 
 BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/diego-client/config`. Replace `integration_config.json` bbs certificate fields with absolute path of certificate files.
 
-Note:
-- IP `10.244.14.10` is IP address of `routing_api_z1/0` job in cf-routing-release. If this IP address happens to be different in your cf release then change the entry accordingly.
-- IP `10.244.14.2` is IP address of `tcp_router_z1/0` job in cf-routing-release.
-
-Make following entry in `/etc/hosts` file
+For bosh-lite and running the router package tests, make following entry in `/etc/hosts` file
 ```
 10.244.16.2 bbs.service.cf.internal
 ```

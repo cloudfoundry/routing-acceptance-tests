@@ -172,12 +172,6 @@ var _ = Describe("Routing Test", func() {
 		}
 	}
 
-	verifyElbConnection := func(externalPort int, serverId string) {
-		if len(routerApiConfig.ElbAddress) > 0 {
-			verifyConnection(externalPort, serverId, routerApiConfig.ElbAddress)
-		}
-	}
-
 	sendAndReceive := func(address string) (net.Conn, string) {
 		conn, err := net.DialTimeout(CONN_TYPE, address, DEFAULT_CONNECT_TIMEOUT)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -379,10 +373,8 @@ var _ = Describe("Routing Test", func() {
 
 			It("sends traffic on the different external ports to the same container port", func() {
 				verifyConnections(externalPort1, serverId1)
-				verifyElbConnection(externalPort1, serverId1)
 
 				verifyConnections(externalPort2, serverId1)
-				verifyElbConnection(externalPort2, serverId1)
 			})
 		})
 
@@ -440,7 +432,6 @@ var _ = Describe("Routing Test", func() {
 				It("receives TCP traffic on desired external port", func() {
 					oldExternalPort := externalPort1
 					verifyConnections(externalPort1, serverId1)
-					verifyElbConnection(externalPort1, serverId1)
 
 					By("updating LRP with new external port it receives traffic on new external port")
 					externalPort1 = nextExternalPort()
@@ -449,7 +440,6 @@ var _ = Describe("Routing Test", func() {
 					err := bbsClient.UpdateDesiredLRP(processGuid, updatedLrp)
 					Expect(err).ShouldNot(HaveOccurred())
 					verifyConnections(externalPort1, serverId1)
-					verifyElbConnection(externalPort1, serverId1)
 
 					verifyPortClosed(oldExternalPort)
 				})
@@ -481,7 +471,6 @@ var _ = Describe("Routing Test", func() {
 				It("receives TCP traffic on desired external port", func() {
 					prefix := serverId1 + fmt.Sprintf("(0.0.0.0:%d)", sampleReceiverPort1)
 					verifyConnections(externalPort1, prefix)
-					verifyElbConnection(externalPort1, prefix)
 
 					By("updating LRP to map external port to different container port")
 					updatedLrp := helpers.UpdateDesiredLRP(uint32(externalPort1),
@@ -491,7 +480,6 @@ var _ = Describe("Routing Test", func() {
 
 					prefix = serverId1 + fmt.Sprintf("(0.0.0.0:%d)", sampleReceiverPort2)
 					verifyConnections(externalPort1, prefix)
-					verifyElbConnection(externalPort1, prefix)
 				})
 			})
 		})

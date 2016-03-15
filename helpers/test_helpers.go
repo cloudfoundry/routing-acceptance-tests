@@ -3,25 +3,24 @@ package helpers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"os"
 
 	"github.com/cloudfoundry-incubator/bbs"
+	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	"github.com/nu7hatch/gouuid"
 )
 
-type RouterApiConfig struct {
+type RoutingConfig struct {
+	helpers.Config
+	RoutingApiUrl     string       `json:"-"`
 	Addresses         []string     `json:"addresses"`
-	ElbAddress        string       `json:"elb_address"`
-	Port              uint16       `json:"port"`
 	BBSAddress        string       `json:"bbs_api_url,omitempty"`
 	BBSClientCertFile string       `json:"bbs_client_cert,omitempty"`
 	BBSClientKeyFile  string       `json:"bbs_client_key,omitempty"`
 	BBSCACertFile     string       `json:"bbs_ca_cert,omitempty"`
 	BBSRequireSSL     bool         `json:"bbs_require_ssl"`
-	SystemDomain      string       `json:"system_domain"`
-	RoutingApiUrl     string       `json:"routing_api_url"`
-	UseHttp           bool         `json:"use_http"`
 	OAuth             *OAuthConfig `json:"oauth"`
 }
 
@@ -37,9 +36,9 @@ const (
 	DEFAULT_BBS_API_URL = "http://bbs.service.cf.internal:8889"
 )
 
-func LoadConfig() RouterApiConfig {
-
+func LoadConfig() RoutingConfig {
 	loadedConfig := loadConfigJsonFromPath()
+	loadedConfig.Config = helpers.LoadConfig()
 
 	if loadedConfig.OAuth == nil {
 		panic("missing configuration oauth")
@@ -49,26 +48,30 @@ func LoadConfig() RouterApiConfig {
 		panic("missing configuration 'addresses'")
 	}
 
-	if loadedConfig.BBSAddress == "" {
-		loadedConfig.BBSAddress = DEFAULT_BBS_API_URL
+	if loadedConfig.AppsDomain == "" {
+		panic("missing configuration apps_domain")
 	}
 
-	if loadedConfig.RoutingApiUrl == "" && loadedConfig.SystemDomain == "" {
-		panic("Need to set either routing_api_url or system_domain")
+	if loadedConfig.ApiEndpoint == "" {
+		panic("missing configuration api")
 	}
-	if loadedConfig.RoutingApiUrl == "" {
-		loadedConfig.RoutingApiUrl = loadedConfig.Protocol() + "api." + loadedConfig.SystemDomain
+
+	if loadedConfig.BBSAddress == "" {
+		loadedConfig.BBSAddress = DEFAULT_BBS_API_URL
 	}
 
 	if loadedConfig.BBSRequireSSL &&
 		(loadedConfig.BBSClientCertFile == "" || loadedConfig.BBSClientKeyFile == "" || loadedConfig.BBSCACertFile == "") {
 		panic("ssl enabled: missing configuration for mutual auth")
 	}
+
+	loadedConfig.RoutingApiUrl = fmt.Sprintf("%s%s", loadedConfig.Protocol(), loadedConfig.ApiEndpoint)
+
 	return loadedConfig
 }
 
-func loadConfigJsonFromPath() RouterApiConfig {
-	var config RouterApiConfig
+func loadConfigJsonFromPath() RoutingConfig {
+	var config RoutingConfig
 
 	path := configPath()
 
@@ -95,7 +98,24 @@ func configPath() string {
 	return path
 }
 
-func GetBbsClient(routerApiConfig RouterApiConfig) (bbs.Client, error) {
+func (c RoutingConfig) Protocol() string {
+	if c.UseHttp {
+		return "http://"
+	} else {
+		return "https://"
+	}
+}
+
+func RandomName() string {
+	guid, err := uuid.NewV4()
+	if err != nil {
+		panic(err)
+	}
+
+	return guid.String()
+}
+
+func GetBbsClient(routerApiConfig RoutingConfig) (bbs.Client, error) {
 	bbsUrl, err := url.Parse(routerApiConfig.BBSAddress)
 	if err != nil {
 		return nil, err
@@ -115,21 +135,4 @@ func GetBbsClient(routerApiConfig RouterApiConfig) (bbs.Client, error) {
 		return nil, errors.New("invalid-scheme-in-bbs-address")
 	}
 	return bbsClient, nil
-}
-
-func (c RouterApiConfig) Protocol() string {
-	if c.UseHttp {
-		return "http://"
-	} else {
-		return "https://"
-	}
-}
-
-func RandomName() string {
-	guid, err := uuid.NewV4()
-	if err != nil {
-		panic(err)
-	}
-
-	return guid.String()
 }

@@ -73,7 +73,7 @@ func handleRequest(conn net.Conn, includeServerAddress bool, address string) {
 		// Read the incoming connection into the buffer.
 		readBytes, err := conn.Read(buff)
 		if err != nil {
-			fmt.Println("Closing connection:", err.Error())
+			fmt.Println("Error on connection read:", err.Error())
 			return
 		}
 		var writeBuffer bytes.Buffer
@@ -83,10 +83,10 @@ func handleRequest(conn net.Conn, includeServerAddress bool, address string) {
 		}
 		writeBuffer.WriteString(":")
 		writeBuffer.Write(buff[0:readBytes])
-		fmt.Print(writeBuffer.String())
+		fmt.Println(writeBuffer.String())
 		_, err = conn.Write(writeBuffer.Bytes())
 		if err != nil {
-			fmt.Println("Closing connection:", err.Error())
+			fmt.Println("Error on connection write:", err.Error())
 			return
 		}
 	}
