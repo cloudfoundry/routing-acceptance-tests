@@ -24,7 +24,7 @@ The following commands will create a config file `integration_config.json` for a
 cd ~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/
 cat > integration_config.json <<EOF
 {
-  "addresses": ["10.244.8.2"],
+  "addresses": ["10.244.14.2"],
   "bbs_api_url": "https://bbs.service.cf.internal:8889",
   "bbs_require_ssl": true,
   "bbs_client_cert": "/path/to/bbs/client.crt",
@@ -47,8 +47,8 @@ The `addresses` property contains the IP addresses of the TCP Routers.
 BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/desired_lrp_client/config`. Replace `integration_config.json` bbs certificate fields with absolute path of certificate files.
 
 Note:
-- IP `10.24.8.10` is IP address of `routing_api_z1/0` job in cf-routing-release. If this IP address happens to be different in your cf release then change the entry accordingly.
-- IP `10.24.8.2` is IP address of `tcp_router_z1/0` job in cf-routing-release.
+- IP `10.244.14.10` is IP address of `routing_api_z1/0` job in cf-routing-release. If this IP address happens to be different in your cf release then change the entry accordingly.
+- IP `10.244.14.2` is IP address of `tcp_router_z1/0` job in cf-routing-release.
 
 Make following entry in `/etc/hosts` file
 ```
