@@ -91,9 +91,9 @@ func loadConfigJsonFromPath() RouterApiConfig {
 }
 
 func configPath() string {
-	path := os.Getenv("ROUTER_API_CONFIG")
+	path := os.Getenv("CONFIG")
 	if path == "" {
-		panic("Must set $ROUTER_API_CONFIG to point to an integration config .json file.")
+		panic("Must set $CONFIG to point to an integration config .json file.")
 	}
 
 	return path

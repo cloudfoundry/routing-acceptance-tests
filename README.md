@@ -8,7 +8,7 @@ This test suite exercises [Router](https://github.com/cloudfoundry-incubator/cf-
 
 To run the Router Acceptance tests, you will need:
 - a running router deployment
-- an environment variable `ROUTER_API_CONFIG` which points to a `.json` file that contains the router api endpoint
+- an environment variable `CONFIG` which points to a `.json` file that contains the router api endpoint
 - make sure that your GOPATH is set to root directory of [cf-routing-release](https://github.com/cloudfoundry-incubator/cf-routing-release) 
 ```bash
 git clone https://github.com/cloudfoundry-incubator/cf-routing-release.git
@@ -17,7 +17,7 @@ cd cf-routing-release
 source .envrc
 ```
 
-The following commands will create a config file `integration_config.json` for a [bosh-lite](https://github.com/cloudfoundry/bosh-lite) installation and set the `ROUTER_API_CONFIG` environment variable to the path for this file. Edit `integration_config.json` as appropriate for your environment.
+The following commands will create a config file `integration_config.json` for a [bosh-lite](https://github.com/cloudfoundry/bosh-lite) installation and set the `CONFIG` environment variable to the path for this file. Edit `integration_config.json` as appropriate for your environment.
 
 
 ```bash
@@ -40,7 +40,7 @@ cat > integration_config.json <<EOF
   }
 }
 EOF
-export ROUTER_API_CONFIG=$PWD/integration_config.json
+export CONFIG=$PWD/integration_config.json
 ```
 The `addresses` property contains the IP addresses of the TCP Routers.
 
@@ -58,7 +58,7 @@ Note that IP `10.244.16.130` is IP address of `database_z1/0` job in diego relea
 
 ### Running the tests
 
-After correctly setting the `ROUTER_API_CONFIG` environment variable, the following command will run the tests:
+After correctly setting the `CONFIG` environment variable, the following command will run the tests:
 
 ```
     ./bin/test
