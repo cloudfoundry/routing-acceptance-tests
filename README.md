@@ -1,13 +1,13 @@
-# Router Acceptance Tests 
+# Router Acceptance Tests
 
-This test suite exercises [Router](https://github.com/cloudfoundry-incubator/cf-routing-release).
+This test suite exercises [Cloud Foundry Routing](https://github.com/cloudfoundry-incubator/cf-routing-release) deployment.
 
 ## Running Acceptance tests
 
 ### Test setup
 
 To run the Router Acceptance tests, you will need:
-- a running router deployment
+- a running cf-routing-release deployment
 - an environment variable `CONFIG` which points to a `.json` file that contains the router api endpoint
 - make sure that your GOPATH is set to root directory of [cf-routing-release](https://github.com/cloudfoundry-incubator/cf-routing-release) 
 ```bash
@@ -32,10 +32,10 @@ cat > integration_config.json <<EOF
   "bbs_ca_cert": "/path/to/bbs/ca_cert.crt",
   "routing_api_url": "http://api.bosh-lite.com",
   "oauth": {
-    "token_endpoint": "http://uaa.bosh-lite.com",
+    "token_endpoint": "https://uaa.bosh-lite.com",
     "client_name": "tcp_emitter",
     "client_secret": "tcp-emitter-secret",
-    "port": 80
+    "port": 443,
     "skip_oauth_tls_verification": true,
   }
 }
@@ -44,7 +44,7 @@ export CONFIG=$PWD/integration_config.json
 ```
 The `addresses` property contains the IP addresses of the TCP Routers.
 
-BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/desired_lrp_client/config`. Replace `integration_config.json` bbs certificate fields with absolute path of certificate files.
+BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/diego-client/config`. Replace `integration_config.json` bbs certificate fields with absolute path of certificate files.
 
 Note:
 - IP `10.244.14.10` is IP address of `routing_api_z1/0` job in cf-routing-release. If this IP address happens to be different in your cf release then change the entry accordingly.
@@ -52,9 +52,9 @@ Note:
 
 Make following entry in `/etc/hosts` file
 ```
-10.244.16.130 bbs.service.cf.internal
+10.244.16.2 bbs.service.cf.internal
 ```
-Note that IP `10.244.16.130` is IP address of `database_z1/0` job in diego release. If this IP address happens to be different in your diego release then change the entry accordingly.
+Note that IP `10.244.16.2` is IP address of `database_z1/0` job in diego release. If this IP address happens to be different in your diego release then change the entry accordingly.
 
 ### Running the tests
 
