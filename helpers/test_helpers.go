@@ -49,10 +49,6 @@ func LoadConfig() RouterApiConfig {
 		panic("missing configuration 'addresses'")
 	}
 
-	if loadedConfig.Port == 0 {
-		panic("missing configuration 'port'")
-	}
-
 	if loadedConfig.BBSAddress == "" {
 		loadedConfig.BBSAddress = DEFAULT_BBS_API_URL
 	}

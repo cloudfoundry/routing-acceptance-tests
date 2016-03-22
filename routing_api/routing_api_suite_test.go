@@ -2,6 +2,7 @@ package routing_api
 
 import (
 	"os/exec"
+	"strconv"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -14,6 +15,9 @@ import (
 )
 
 func Rtr(args ...string) *Session {
+	portString := strconv.Itoa(routerApiConfig.OAuth.Port)
+	oauthUrl := routerApiConfig.OAuth.TokenEndpoint + ":" + portString
+	args = append(args, "--api", routerApiConfig.RoutingApiUrl, "--client-id", routerApiConfig.OAuth.ClientName, "--client-secret", routerApiConfig.OAuth.ClientSecret, "--oauth-url", oauthUrl)
 	if routerApiConfig.OAuth.SkipOAuthTLSVerification {
 		args = append(args, "--skip-tls-verification")
 	}

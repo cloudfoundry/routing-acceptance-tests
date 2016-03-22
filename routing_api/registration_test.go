@@ -1,7 +1,6 @@
 package routing_api
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/helpers"
@@ -13,20 +12,9 @@ import (
 
 var _ = Describe("Registration", func() {
 	var (
-		oauthPassword      string
-		oauthUrl           string
-		routingApiEndpoint string
-
 		route     string
 		routeJSON string
 	)
-
-	BeforeEach(func() {
-		oauthPassword = routerApiConfig.OAuth.ClientSecret
-		routingApiEndpoint = routerApiConfig.RoutingApiUrl
-		portString := strconv.Itoa(routerApiConfig.OAuth.Port)
-		oauthUrl = routerApiConfig.OAuth.TokenEndpoint + ":" + portString
-	})
 
 	Describe("HTTP Route", func() {
 		var (
@@ -44,12 +32,12 @@ var _ = Describe("Registration", func() {
 		})
 
 		It("can register, list, subscribe to sse and unregister routes", func() {
-			args := []string{"events", "--http", "--api", routingApiEndpoint, "--client-id", "tcp_emitter", "--client-secret", oauthPassword, "--oauth-url", oauthUrl}
+			args := []string{"events", "--http"}
 			eventsSession = Rtr(args...)
 			Eventually(eventsSession.Out, 70*time.Second).Should(Say("port"))
 			Eventually(eventsSession.Out, 70*time.Second).Should(Say("route"))
 
-			args = []string{"register", routeJSON, "--api", routingApiEndpoint, "--client-id", "tcp_emitter", "--client-secret", oauthPassword, "--oauth-url", oauthUrl}
+			args = []string{"register", routeJSON}
 			session := Rtr(args...)
 			Eventually(session.Out).Should(Say("Successfully registered routes"))
 			Eventually(eventsSession.Out, 10*time.Second).Should(Say(route))
@@ -58,17 +46,17 @@ var _ = Describe("Registration", func() {
 			Eventually(eventsSession.Out).Should(Say(`"ttl":60`))
 			Eventually(eventsSession.Out).Should(Say(`"Action":"Upsert"`))
 
-			args = []string{"list", "--api", routingApiEndpoint, "--client-id", "tcp_emitter", "--client-secret", oauthPassword, "--oauth-url", oauthUrl}
+			args = []string{"list"}
 			session = Rtr(args...)
 
 			Eventually(session.Out).Should(Say(route))
 
-			args = []string{"unregister", routeJSON, "--api", routingApiEndpoint, "--client-id", "tcp_emitter", "--client-secret", oauthPassword, "--oauth-url", oauthUrl}
+			args = []string{"unregister", routeJSON}
 			session = Rtr(args...)
 
 			Eventually(session.Out).Should(Say("Successfully unregistered routes"))
 
-			args = []string{"list", "--api", routingApiEndpoint, "--client-id", "tcp_emitter", "--client-secret", oauthPassword, "--oauth-url", oauthUrl}
+			args = []string{"list"}
 			session = Rtr(args...)
 
 			Eventually(session.Out).ShouldNot(Say(route))
