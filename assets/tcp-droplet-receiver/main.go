@@ -53,6 +53,8 @@ func main() {
 func handleRequest(conn net.Conn) {
 	// Close the connection when you're done with it.
 	defer conn.Close()
+	remoteAddr := conn.RemoteAddr()
+	fmt.Printf("Remote Address: %s\n", remoteAddr)
 	// Make a buffer to hold incoming data.
 	buff := make([]byte, 1024)
 	// Continue to receive the data forever...
@@ -60,17 +62,17 @@ func handleRequest(conn net.Conn) {
 		// Read the incoming connection into the buffer.
 		readBytes, err := conn.Read(buff)
 		if err != nil {
-			fmt.Println("Closing connection:", err.Error())
+			fmt.Printf("Closing connection to %s: %s\n", remoteAddr, err.Error())
 			return
 		}
 		var writeBuffer bytes.Buffer
 		writeBuffer.WriteString(*serverId)
 		writeBuffer.WriteString(":")
 		writeBuffer.Write(buff[0:readBytes])
-		fmt.Print(writeBuffer.String())
+		fmt.Printf("Message to %s: %s\n", remoteAddr, writeBuffer.String())
 		_, err = conn.Write(writeBuffer.Bytes())
 		if err != nil {
-			fmt.Println("Closing connection:", err.Error())
+			fmt.Printf("Closing connection to %s: %s\n", remoteAddr, err.Error())
 			return
 		}
 	}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/helpers/assets"
 	"github.com/cloudfoundry-incubator/cf-routing-test-helpers/helpers"
+	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -47,7 +48,8 @@ var _ = Describe("Tcp Routing", func() {
 		It("maps a single external port to an application's container port", func() {
 			for _, routerAddr := range routingConfig.Addresses {
 				Eventually(func() error {
-					return checkOpenPort(routerAddr, externalPort1)
+					_, err := sendAndReceive(routerAddr, externalPort1)
+					return err
 				}, "30s", "5s").ShouldNot(HaveOccurred())
 
 				resp, err := sendAndReceive(routerAddr, externalPort1)
@@ -83,7 +85,8 @@ var _ = Describe("Tcp Routing", func() {
 			It("maps single external port to both applications", func() {
 				for _, routerAddr := range routingConfig.Addresses {
 					Eventually(func() error {
-						return checkOpenPort(routerAddr, externalPort1)
+						_, err := sendAndReceive(routerAddr, externalPort1)
+						return err
 					}, "30s", "5s").ShouldNot(HaveOccurred())
 
 					Eventually(func() []string {
@@ -109,17 +112,20 @@ var _ = Describe("Tcp Routing", func() {
 
 			It("routes traffic from two external ports to the app", func() {
 				for _, routerAddr := range routingConfig.Addresses {
+
 					Eventually(func() error {
-						return checkOpenPort(routerAddr, externalPort1)
+						_, err := sendAndReceive(routerAddr, externalPort1)
+						return err
+					}, "30s", "5s").ShouldNot(HaveOccurred())
+
+					Eventually(func() error {
+						_, err := sendAndReceive(routerAddr, externalPort2)
+						return err
 					}, "30s", "5s").ShouldNot(HaveOccurred())
 
 					resp, err := sendAndReceive(routerAddr, externalPort1)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(resp).To(ContainSubstring(serverId1))
-
-					Eventually(func() error {
-						return checkOpenPort(routerAddr, externalPort2)
-					}, "30s", "5s").ShouldNot(HaveOccurred())
 
 					resp, err = sendAndReceive(routerAddr, externalPort2)
 					Expect(err).ToNot(HaveOccurred())
@@ -133,6 +139,7 @@ var _ = Describe("Tcp Routing", func() {
 
 const (
 	DEFAULT_CONNECT_TIMEOUT = 5 * time.Second
+	DEFAULT_RW_TIMEOUT      = 2 * time.Second
 	CONN_TYPE               = "tcp"
 	BUFFER_SIZE             = 1024
 )
@@ -149,12 +156,6 @@ func getServerResponse(addr string, externalPort uint16) (string, error) {
 	return tokens[0], nil
 }
 
-func checkOpenPort(addr string, externalPort uint16) error {
-	address := fmt.Sprintf("%s:%d", addr, externalPort)
-	_, err := net.DialTimeout(CONN_TYPE, address, DEFAULT_CONNECT_TIMEOUT)
-	return err
-}
-
 func sendAndReceive(addr string, externalPort uint16) (string, error) {
 	address := fmt.Sprintf("%s:%d", addr, externalPort)
 
@@ -162,18 +163,27 @@ func sendAndReceive(addr string, externalPort uint16) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	logger.Info("connected", lager.Data{"address": conn.RemoteAddr()})
 
 	message := []byte(fmt.Sprintf("Time is %d", time.Now().Nanosecond()))
+	err = conn.SetWriteDeadline(time.Now().Add(DEFAULT_RW_TIMEOUT))
 	_, err = conn.Write(message)
 	if err != nil {
 		return "", err
 	}
+	logger.Info("wrote-message", lager.Data{"address": conn.RemoteAddr(), "message": string(message)})
 
 	buff := make([]byte, BUFFER_SIZE)
-	_, err = conn.Read(buff)
+	err = conn.SetReadDeadline(time.Now().Add(DEFAULT_RW_TIMEOUT))
 	if err != nil {
 		return "", err
 	}
+	n, err := conn.Read(buff)
+	if err != nil {
+		conn.Close()
+		return "", err
+	}
+	logger.Info("read-message", lager.Data{"address": conn.RemoteAddr(), "message": string(buff[:n])})
 
 	return string(buff), conn.Close()
 }

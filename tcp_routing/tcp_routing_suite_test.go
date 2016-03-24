@@ -55,8 +55,7 @@ const preallocatedExternalPorts = 100
 var (
 	DEFAULT_TIMEOUT = 2 * time.Minute
 	CF_PUSH_TIMEOUT = 2 * time.Minute
-
-	domainName string
+	domainName      string
 
 	routingConfig    helpers.RoutingConfig
 	routingApiClient routing_api.Client
