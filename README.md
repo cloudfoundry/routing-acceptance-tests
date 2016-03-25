@@ -49,13 +49,10 @@ export CONFIG=$PWD/integration_config.json
 ```
 
 Note:
-- IP `10.24.14.2` is IP address of `tcp_router_z1/0` job in cf-routing-release. If this IP address happens to be different in your cf release then change the entry accordingly.
+- The `addresses` property contains the IP addresses of the TCP Routers and/or the Load Balancer's IP address. IP `10.24.14.2` is IP address of `tcp_router_z1/0` job in cf-routing-release. If this IP address happens to be different in your deployment then change the entry accordingly.
 - `admin_user` and `admin_password` properties refer to the admin user used to perform a CF login with the cf CLI.
 - `skip_ssl_validation` is used for the cf CLI when targeting an environment.
-- All `bbs_*` properties are only required if running the `router` test package.
-- The `addresses` property contains the IP addresses of the TCP Routers and/or the Load Balancer's IP address.
-
-BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/diego-client/config`. Replace `integration_config.json` bbs certificate fields with absolute path of certificate files.
+- All `bbs_*` properties are only required if running the `router` test package. BBS client cert, key and ca cert for bosh lite environment can be found in `~/workspace/cf-routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/diego-client/config`. Replace `integration_config.json` bbs certificate fields with absolute path of certificate files.
 
 For bosh-lite and running the router package tests, make following entry in `/etc/hosts` file
 ```
