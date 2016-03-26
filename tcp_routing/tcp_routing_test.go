@@ -90,10 +90,19 @@ var _ = Describe("Tcp Routing", func() {
 					}, "30s", "5s").ShouldNot(HaveOccurred())
 
 					Eventually(func() []string {
-						actualServerId1, err1 := getServerResponse(routerAddr, externalPort1)
-						Expect(err1).ToNot(HaveOccurred())
-						actualServerId2, err2 := getServerResponse(routerAddr, externalPort1)
-						Expect(err2).ToNot(HaveOccurred())
+						c := make(chan string, 2)
+						go func(c chan string) {
+							funcactualServerId1, err1 := getServerResponse(routerAddr, externalPort1)
+							Expect(err1).ToNot(HaveOccurred())
+							c <- funcactualServerId1
+						}(c)
+						go func(c chan string) {
+							actualServerId2, err2 := getServerResponse(routerAddr, externalPort1)
+							Expect(err2).ToNot(HaveOccurred())
+							c <- actualServerId2
+						}(c)
+						actualServerId1 := <-c
+						actualServerId2 := <-c
 						return []string{actualServerId1, actualServerId2}
 					}, "30s", "5s").Should(ConsistOf(serverId1, serverId2))
 				}
