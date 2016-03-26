@@ -49,7 +49,7 @@ var _ = Describe("Registration", func() {
 			args = []string{"list"}
 			session = Rtr(args...)
 
-			Eventually(session.Out).Should(Say(route))
+			Eventually(session.Out, "5s", "1s").Should(Say(route))
 
 			args = []string{"unregister", routeJSON}
 			session = Rtr(args...)
@@ -59,7 +59,7 @@ var _ = Describe("Registration", func() {
 			args = []string{"list"}
 			session = Rtr(args...)
 
-			Eventually(session.Out).ShouldNot(Say(route))
+			Eventually(session.Out, "5s", "1s").ShouldNot(Say(route))
 		})
 	})
 })
