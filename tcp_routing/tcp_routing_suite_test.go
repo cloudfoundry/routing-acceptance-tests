@@ -53,9 +53,10 @@ func TestTcpRouting(t *testing.T) {
 const preallocatedExternalPorts = 100
 
 var (
-	DEFAULT_TIMEOUT = 2 * time.Minute
-	CF_PUSH_TIMEOUT = 2 * time.Minute
-	domainName      string
+	DEFAULT_TIMEOUT          = 1 * time.Minute
+	DEFAULT_POLLING_INTERVAL = 5 * time.Second
+	CF_PUSH_TIMEOUT          = 2 * time.Minute
+	domainName               string
 
 	routingConfig    helpers.RoutingConfig
 	routingApiClient routing_api.Client

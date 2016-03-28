@@ -50,7 +50,7 @@ var _ = Describe("Tcp Routing", func() {
 				Eventually(func() error {
 					_, err := sendAndReceive(routerAddr, externalPort1)
 					return err
-				}, "30s", "5s").ShouldNot(HaveOccurred())
+				}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).ShouldNot(HaveOccurred())
 
 				resp, err := sendAndReceive(routerAddr, externalPort1)
 				Expect(err).ToNot(HaveOccurred())
@@ -87,24 +87,20 @@ var _ = Describe("Tcp Routing", func() {
 					Eventually(func() error {
 						_, err := sendAndReceive(routerAddr, externalPort1)
 						return err
-					}, "30s", "5s").ShouldNot(HaveOccurred())
+					}, "30s", DEFAULT_POLLING_INTERVAL).ShouldNot(HaveOccurred())
 
-					Eventually(func() []string {
-						c := make(chan string, 2)
-						go func(c chan string) {
-							funcactualServerId1, err1 := getServerResponse(routerAddr, externalPort1)
-							Expect(err1).ToNot(HaveOccurred())
-							c <- funcactualServerId1
-						}(c)
-						go func(c chan string) {
-							actualServerId2, err2 := getServerResponse(routerAddr, externalPort1)
-							Expect(err2).ToNot(HaveOccurred())
-							c <- actualServerId2
-						}(c)
-						actualServerId1 := <-c
-						actualServerId2 := <-c
-						return []string{actualServerId1, actualServerId2}
-					}, "30s", "5s").Should(ConsistOf(serverId1, serverId2))
+					Eventually(func() string {
+						serverId, err := getServerResponse(routerAddr, externalPort1)
+						Expect(err).ToNot(HaveOccurred())
+						return serverId
+					}, "20s", DEFAULT_POLLING_INTERVAL).Should(Equal(serverId1))
+
+					Eventually(func() string {
+						serverId, err := getServerResponse(routerAddr, externalPort1)
+						Expect(err).ToNot(HaveOccurred())
+						return serverId
+					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(Equal(serverId2))
+
 				}
 			})
 		})
@@ -121,24 +117,15 @@ var _ = Describe("Tcp Routing", func() {
 
 			It("routes traffic from two external ports to the app", func() {
 				for _, routerAddr := range routingConfig.Addresses {
+					Eventually(func() string {
+						serverId, _ := sendAndReceive(routerAddr, externalPort1)
+						return serverId
+					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(ContainSubstring(serverId1))
 
-					Eventually(func() error {
-						_, err := sendAndReceive(routerAddr, externalPort1)
-						return err
-					}, "30s", "5s").ShouldNot(HaveOccurred())
-
-					Eventually(func() error {
-						_, err := sendAndReceive(routerAddr, externalPort2)
-						return err
-					}, "30s", "5s").ShouldNot(HaveOccurred())
-
-					resp, err := sendAndReceive(routerAddr, externalPort1)
-					Expect(err).ToNot(HaveOccurred())
-					Expect(resp).To(ContainSubstring(serverId1))
-
-					resp, err = sendAndReceive(routerAddr, externalPort2)
-					Expect(err).ToNot(HaveOccurred())
-					Expect(resp).To(ContainSubstring(serverId1))
+					Eventually(func() string {
+						serverId, _ := sendAndReceive(routerAddr, externalPort2)
+						return serverId
+					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(ContainSubstring(serverId1))
 				}
 			})
 		})

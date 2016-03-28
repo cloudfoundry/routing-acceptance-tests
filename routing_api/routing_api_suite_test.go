@@ -28,9 +28,10 @@ func Rtr(args ...string) *Session {
 }
 
 const (
-	DEFAULT_TIMEOUT      = 30 * time.Second
-	CF_PUSH_TIMEOUT      = 2 * time.Minute
-	DEFAULT_MEMORY_LIMIT = "256M"
+	DEFAULT_TIMEOUT          = 30 * time.Second
+	DEFAULT_POLLING_INTERVAL = 1 * time.Second
+	CF_PUSH_TIMEOUT          = 2 * time.Minute
+	DEFAULT_MEMORY_LIMIT     = "256M"
 )
 
 var routerApiConfig helpers.RoutingConfig
