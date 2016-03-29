@@ -75,7 +75,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	routingApiClient.SetToken(token.AccessToken)
-	routerGroupGuid := routing_helpers.GetRouterGroupGuid(routingApiClient)
+	routerGroupGuid := getRouterGroupGuid(routingApiClient)
 	domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP-DOMAIN-"), routingConfig.AppsDomain)
 	cf.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
 		routing_helpers.CreateSharedDomain(domainName, routerGroupGuid, DEFAULT_TIMEOUT)
@@ -114,4 +114,11 @@ func newUaaClient(routerApiConfig helpers.RoutingConfig, logger lager.Logger) ua
 	Expect(err).ToNot(HaveOccurred())
 
 	return uaaClient
+}
+
+func getRouterGroupGuid(routingApiClient routing_api.Client) string {
+	routerGroups, err := routingApiClient.RouterGroups()
+	Expect(err).ToNot(HaveOccurred())
+	Expect(len(routerGroups)).ToNot(Equal(0))
+	return routerGroups[0].Guid
 }
