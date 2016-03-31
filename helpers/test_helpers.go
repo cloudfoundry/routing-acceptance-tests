@@ -14,7 +14,7 @@ import (
 
 type RoutingConfig struct {
 	helpers.Config
-	RoutingApiUrl     string       `json:"-"`
+	RoutingApiUrl     string       `json:"-"` //"-" is used for ignoring field
 	Addresses         []string     `json:"addresses"`
 	BBSAddress        string       `json:"bbs_api_url,omitempty"`
 	BBSClientCertFile string       `json:"bbs_client_cert,omitempty"`
