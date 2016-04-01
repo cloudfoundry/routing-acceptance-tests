@@ -131,6 +131,112 @@ var _ = Describe("Tcp Routing", func() {
 		})
 
 	})
+
+	Context("multiple-app ports", func() {
+
+		var (
+			appName           string
+			tcpSampleReceiver = assets.NewAssets().TcpSampleReceiver
+			serverId1         string
+			externalPort1     uint16
+			appPort1          uint16
+			appPort2          uint16
+			spaceName         string
+		)
+
+		BeforeEach(func() {
+			appName = helpers.GenerateAppName()
+			serverId1 = "server1"
+			appPort1 = 3434
+			appPort2 = 3535
+			cmd := fmt.Sprintf("tcp-sample-receiver --address=0.0.0.0:%d,0.0.0.0:%d --serverId=%s", appPort1, appPort2, serverId1)
+			spaceName = context.RegularUserContext().Space
+			externalPort1 = helpers.CreateTcpRouteWithRandomPort(spaceName, domainName, DEFAULT_TIMEOUT)
+
+			// Uses --no-route flag so there is no HTTP route
+			helpers.PushAppNoStart(appName, tcpSampleReceiver, routingConfig.GoBuildpackName, domainName, CF_PUSH_TIMEOUT, "-c", cmd, "--no-route")
+			helpers.EnableDiego(appName, DEFAULT_TIMEOUT)
+			helpers.UpdatePorts(appName, []uint16{appPort1, appPort2}, DEFAULT_TIMEOUT)
+			helpers.CreateRouteMapping(appName, "", externalPort1, appPort1, DEFAULT_TIMEOUT)
+			helpers.StartApp(appName, DEFAULT_TIMEOUT)
+		})
+
+		AfterEach(func() {
+			helpers.AppReport(appName, DEFAULT_TIMEOUT)
+			helpers.DeleteApp(appName, DEFAULT_TIMEOUT)
+		})
+
+		Context("single external port with multiple app ports", func() {
+			BeforeEach(func() {
+				helpers.CreateRouteMapping(appName, "", externalPort1, appPort2, DEFAULT_TIMEOUT)
+			})
+
+			It("should switch between ports", func() {
+
+				for _, routerAddr := range routingConfig.Addresses {
+					Eventually(func() error {
+						_, err := sendAndReceive(routerAddr, externalPort1)
+						return err
+					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).ShouldNot(HaveOccurred())
+
+					Eventually(func() string {
+						resp, err := sendAndReceive(routerAddr, externalPort1)
+						Expect(err).ToNot(HaveOccurred())
+						return resp
+					}, "20s", "3s").Should(ContainSubstring(fmt.Sprintf("%d", appPort1)))
+
+					Eventually(func() string {
+						resp, err := sendAndReceive(routerAddr, externalPort1)
+						Expect(err).ToNot(HaveOccurred())
+						return resp
+					}, "30s", "3s").Should(ContainSubstring(fmt.Sprintf("%d", appPort2)))
+				}
+			})
+		})
+
+		Context("multiple external ports with multiple app ports", func() {
+			var (
+				externalPort2 uint16
+			)
+
+			BeforeEach(func() {
+				externalPort2 = helpers.CreateTcpRouteWithRandomPort(spaceName, domainName, DEFAULT_TIMEOUT)
+				helpers.CreateRouteMapping(appName, "", externalPort2, appPort2, DEFAULT_TIMEOUT)
+			})
+
+			It("should maps first external port to the first app port", func() {
+
+				for _, routerAddr := range routingConfig.Addresses {
+					Eventually(func() error {
+						_, err := sendAndReceive(routerAddr, externalPort1)
+						return err
+					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).ShouldNot(HaveOccurred())
+
+					Eventually(func() string {
+						resp, err := sendAndReceive(routerAddr, externalPort1)
+						Expect(err).ToNot(HaveOccurred())
+						return resp
+					}, "20s", "3s").Should(ContainSubstring(fmt.Sprintf("%d", appPort1)))
+				}
+			})
+
+			It("should maps second external port to the second app port", func() {
+				for _, routerAddr := range routingConfig.Addresses {
+					Eventually(func() error {
+						_, err := sendAndReceive(routerAddr, externalPort2)
+						return err
+					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).ShouldNot(HaveOccurred())
+
+					Eventually(func() string {
+						resp, err := sendAndReceive(routerAddr, externalPort2)
+						Expect(err).ToNot(HaveOccurred())
+						return resp
+					}, "20s", "3s").Should(ContainSubstring(fmt.Sprintf("%d", appPort2)))
+				}
+			})
+		})
+	})
+
 })
 
 const (
