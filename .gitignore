@@ -1,4 +1,3 @@
-*.json
 integration_config.json
 *.config
 results
