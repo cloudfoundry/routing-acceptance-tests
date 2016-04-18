@@ -11,7 +11,6 @@ import (
 	"github.com/cloudfoundry-incubator/cf-routing-test-helpers/helpers"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/runner"
 	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
@@ -299,13 +298,11 @@ func sendAndReceive(addr string, externalPort uint16) (string, error) {
 
 func updateOrgQuota(context cf_helpers.SuiteContext) {
 	cf.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
-		orgGuid := runner.NewCmdRunner(cf.Cf("org", context.RegularUserContext().Org, "--guid"), context.ShortTimeout()).
-			Run().Out.Contents()
+		orgGuid := cf.Cf("org", context.RegularUserContext().Org, "--guid").Wait(context.ShortTimeout()).Out.Contents()
 
 		quotaUrl, err := helpers.GetOrgQuotaDefinitionUrl(string(orgGuid), context.ShortTimeout())
 		Expect(err).NotTo(HaveOccurred())
 
-		runner.NewCmdRunner(cf.Cf("curl", quotaUrl, "-X", "PUT", "-d", "'{\"total_reserved_route_ports\":-1}'"),
-			context.ShortTimeout()).Run()
+		cf.Cf("curl", quotaUrl, "-X", "PUT", "-d", "'{\"total_reserved_route_ports\":-1}'").Wait(context.ShortTimeout())
 	})
 }
