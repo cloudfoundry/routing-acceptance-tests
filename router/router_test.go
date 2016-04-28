@@ -58,7 +58,7 @@ var _ = Describe("Routing Test", func() {
 		tcpRouteMappings := make([]apimodels.TcpRouteMapping, 0)
 
 		for _, backendPort := range backendPorts {
-			tcpMapping := apimodels.NewTcpRouteMapping(routerGroupGuid, uint16(externalPort), externalIP, uint16(backendPort))
+			tcpMapping := apimodels.NewTcpRouteMapping(routerGroupGuid, uint16(externalPort), externalIP, uint16(backendPort), 120)
 			tcpRouteMappings = append(tcpRouteMappings, tcpMapping)
 		}
 		return tcpRouteMappings
