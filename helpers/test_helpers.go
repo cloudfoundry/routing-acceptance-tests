@@ -2,26 +2,18 @@ package helpers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"net/url"
 	"os"
 
-	"github.com/cloudfoundry-incubator/bbs"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	"github.com/nu7hatch/gouuid"
 )
 
 type RoutingConfig struct {
 	helpers.Config
-	RoutingApiUrl     string       `json:"-"` //"-" is used for ignoring field
-	Addresses         []string     `json:"addresses"`
-	BBSAddress        string       `json:"bbs_api_url,omitempty"`
-	BBSClientCertFile string       `json:"bbs_client_cert,omitempty"`
-	BBSClientKeyFile  string       `json:"bbs_client_key,omitempty"`
-	BBSCACertFile     string       `json:"bbs_ca_cert,omitempty"`
-	BBSRequireSSL     bool         `json:"bbs_require_ssl"`
-	OAuth             *OAuthConfig `json:"oauth"`
+	RoutingApiUrl string       `json:"-"` //"-" is used for ignoring field
+	Addresses     []string     `json:"addresses"`
+	OAuth         *OAuthConfig `json:"oauth"`
 }
 
 type OAuthConfig struct {
@@ -31,10 +23,6 @@ type OAuthConfig struct {
 	Port                     int    `json:"port"`
 	SkipOAuthTLSVerification bool   `json:"skip_oauth_tls_verification"`
 }
-
-const (
-	DEFAULT_BBS_API_URL = "http://bbs.service.cf.internal:8889"
-)
 
 func LoadConfig() RoutingConfig {
 	loadedConfig := loadConfigJsonFromPath()
@@ -54,15 +42,6 @@ func LoadConfig() RoutingConfig {
 
 	if loadedConfig.ApiEndpoint == "" {
 		panic("missing configuration api")
-	}
-
-	if loadedConfig.BBSAddress == "" {
-		loadedConfig.BBSAddress = DEFAULT_BBS_API_URL
-	}
-
-	if loadedConfig.BBSRequireSSL &&
-		(loadedConfig.BBSClientCertFile == "" || loadedConfig.BBSClientKeyFile == "" || loadedConfig.BBSCACertFile == "") {
-		panic("ssl enabled: missing configuration for mutual auth")
 	}
 
 	loadedConfig.RoutingApiUrl = fmt.Sprintf("%s%s", loadedConfig.Protocol(), loadedConfig.ApiEndpoint)
@@ -113,26 +92,4 @@ func RandomName() string {
 	}
 
 	return guid.String()
-}
-
-func GetBbsClient(routerApiConfig RoutingConfig) (bbs.Client, error) {
-	bbsUrl, err := url.Parse(routerApiConfig.BBSAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	var bbsClient bbs.Client
-
-	if bbsUrl.Scheme == "http" {
-		bbsClient = bbs.NewClient(bbsUrl.String())
-	} else if bbsUrl.Scheme == "https" {
-		bbsClient, err = bbs.NewSecureClient(bbsUrl.String(), routerApiConfig.BBSCACertFile,
-			routerApiConfig.BBSClientCertFile, routerApiConfig.BBSClientKeyFile)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		return nil, errors.New("invalid-scheme-in-bbs-address")
-	}
-	return bbsClient, nil
 }
