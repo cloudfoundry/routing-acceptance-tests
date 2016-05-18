@@ -13,11 +13,11 @@ import (
 
 	"testing"
 
-	"github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/helpers"
 	routing_helpers "github.com/cloudfoundry-incubator/cf-routing-test-helpers/helpers"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/generator"
 	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
+	"github.com/cloudfoundry-incubator/routing-acceptance-tests/helpers"
 	routing_api "github.com/cloudfoundry-incubator/routing-api"
 	uaaclient "github.com/cloudfoundry-incubator/uaa-go-client"
 	uaaconfig "github.com/cloudfoundry-incubator/uaa-go-client/config"

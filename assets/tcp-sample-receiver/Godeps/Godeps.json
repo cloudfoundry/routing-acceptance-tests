@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/assets/tcp-sample-receiver",
+	"ImportPath": "github.com/cloudfoundry-incubator/routing-acceptance-tests/assets/tcp-sample-receiver",
 	"GoVersion": "go1.5.3",
 	"Deps": [
 		{

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/helpers/assets"
 	"github.com/cloudfoundry-incubator/cf-routing-test-helpers/helpers"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
+	"github.com/cloudfoundry-incubator/routing-acceptance-tests/helpers/assets"
 	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"

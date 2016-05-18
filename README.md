@@ -22,7 +22,7 @@ The following commands will create a config file `integration_config.json` for a
 
 
 ```bash
-cd ~/workspace/routing-release/src/github.com/cloudfoundry-incubator/cf-routing-acceptance-tests/
+cd ~/workspace/routing-release/src/github.com/cloudfoundry-incubator/routing-acceptance-tests/
 cat > integration_config.json <<EOF
 {
   "addresses": ["10.244.14.2"],
