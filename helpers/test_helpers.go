@@ -17,11 +17,11 @@ type RoutingConfig struct {
 }
 
 type OAuthConfig struct {
-	TokenEndpoint            string `json:"token_endpoint"`
-	ClientName               string `json:"client_name"`
-	ClientSecret             string `json:"client_secret"`
-	Port                     int    `json:"port"`
-	SkipOAuthTLSVerification bool   `json:"skip_oauth_tls_verification"`
+	TokenEndpoint     string `json:"token_endpoint"`
+	ClientName        string `json:"client_name"`
+	ClientSecret      string `json:"client_secret"`
+	Port              int    `json:"port"`
+	SkipSSLValidation bool   `json:"skip_ssl_validation"`
 }
 
 func LoadConfig() RoutingConfig {

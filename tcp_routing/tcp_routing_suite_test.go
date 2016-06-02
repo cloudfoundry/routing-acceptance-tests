@@ -99,7 +99,7 @@ func newUaaClient(routerApiConfig helpers.RoutingConfig, logger lager.Logger) ua
 
 	cfg := &uaaconfig.Config{
 		UaaEndpoint:           tokenURL,
-		SkipVerification:      routerApiConfig.OAuth.SkipOAuthTLSVerification,
+		SkipVerification:      routerApiConfig.OAuth.SkipSSLValidation,
 		ClientName:            routerApiConfig.OAuth.ClientName,
 		ClientSecret:          routerApiConfig.OAuth.ClientSecret,
 		MaxNumberOfRetries:    3,

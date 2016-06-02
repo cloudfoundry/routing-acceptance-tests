@@ -37,7 +37,7 @@ cat > integration_config.json <<EOF
     "client_name": "tcp_emitter",
     "client_secret": "tcp-emitter-secret",
     "port": 443,
-    "skip_oauth_tls_verification": true
+    "skip_ssl_validation": true
   }
 }
 EOF
