@@ -7,7 +7,7 @@ This test suite exercises [Cloud Foundry Routing](https://github.com/cloudfoundr
 ### Test setup
 
 To run the Routing Acceptance tests, you will need:
-- a running routing-release deployment
+- a running deployment of [routing-release](https://github.com/cloudfoundry-incubator/routing-release)
 - the latest version of the [rtr CLI](https://github.com/cloudfoundry-incubator/routing-api-cli/releases)
 - an environment variable `CONFIG` which points to a `.json` file that contains the router api endpoint
 - environment variable GOPATH set to root directory of [routing-release](https://github.com/cloudfoundry-incubator/routing-release)
