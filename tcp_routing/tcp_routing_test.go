@@ -189,13 +189,13 @@ var _ = Describe("Tcp Routing", func() {
 						resp, err := sendAndReceive(routerAddr, externalPort1)
 						Expect(err).ToNot(HaveOccurred())
 						return resp
-					}, "20s", "3s").Should(ContainSubstring(fmt.Sprintf("%d", appPort1)))
+					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(ContainSubstring(fmt.Sprintf("%d", appPort1)))
 
 					Eventually(func() string {
 						resp, err := sendAndReceive(routerAddr, externalPort1)
 						Expect(err).ToNot(HaveOccurred())
 						return resp
-					}, "30s", "3s").Should(ContainSubstring(fmt.Sprintf("%d", appPort2)))
+					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(ContainSubstring(fmt.Sprintf("%d", appPort2)))
 				}
 			})
 		})
@@ -222,7 +222,7 @@ var _ = Describe("Tcp Routing", func() {
 						resp, err := sendAndReceive(routerAddr, externalPort1)
 						Expect(err).ToNot(HaveOccurred())
 						return resp
-					}, "20s", "3s").Should(ContainSubstring(fmt.Sprintf("%d", appPort1)))
+					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(ContainSubstring(fmt.Sprintf("%d", appPort1)))
 				}
 			})
 
@@ -237,7 +237,7 @@ var _ = Describe("Tcp Routing", func() {
 						resp, err := sendAndReceive(routerAddr, externalPort2)
 						Expect(err).ToNot(HaveOccurred())
 						return resp
-					}, "20s", "3s").Should(ContainSubstring(fmt.Sprintf("%d", appPort2)))
+					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(ContainSubstring(fmt.Sprintf("%d", appPort2)))
 				}
 			})
 		})
