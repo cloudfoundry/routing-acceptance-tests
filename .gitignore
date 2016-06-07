@@ -2,3 +2,4 @@
 *.config
 results
 *.test
+*.json
