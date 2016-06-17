@@ -21,6 +21,9 @@ func Rtr(args ...string) *Session {
 	if routerApiConfig.OAuth.SkipSSLValidation {
 		args = append(args, "--skip-tls-verification")
 	}
+	if routerApiConfig.OAuth.CACerts != "" {
+		args = append(args, "--ca-certs", routerApiConfig.OAuth.CACerts)
+	}
 	session, err := Start(exec.Command("rtr", args...), GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 
