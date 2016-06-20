@@ -22,7 +22,6 @@ type OAuthConfig struct {
 	ClientSecret      string `json:"client_secret"`
 	Port              int    `json:"port"`
 	SkipSSLValidation bool   `json:"skip_ssl_validation"`
-	CACerts           string `yaml:"ca_certs"`
 }
 
 func LoadConfig() RoutingConfig {
