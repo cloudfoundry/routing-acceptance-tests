@@ -84,8 +84,6 @@ func checkRoutingApiEnabled() {
 
 var _ = BeforeSuite(func() {
 	logger = lagertest.NewTestLogger("test")
-
-	checkRoutingApiEnabled()
 	routingApiClient = routing_api.NewClient(routingConfig.RoutingApiUrl)
 
 	uaaClient := newUaaClient(routingConfig, logger)
@@ -96,6 +94,7 @@ var _ = BeforeSuite(func() {
 	routerGroupGuid := getRouterGroupGuid(routingApiClient)
 	domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP-DOMAIN-"), routingConfig.AppsDomain)
 	cf.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
+		checkRoutingApiEnabled()
 		routing_helpers.CreateSharedDomain(domainName, routerGroupGuid, DEFAULT_TIMEOUT)
 		Expect(routing_helpers.GetDomainGuid(domainName, DEFAULT_TIMEOUT)).NotTo(BeEmpty())
 	})
