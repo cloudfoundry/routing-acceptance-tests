@@ -71,13 +71,14 @@ func checkRoutingApiEnabled() {
 	Expect(cmd.Wait(DEFAULT_TIMEOUT)).To(Exit(0))
 
 	type infoResponse struct {
-		url string `json:"routing_endpoint"`
+		RoutingEndpoint string `json:"routing_endpoint"`
 	}
 
 	var response infoResponse
 	err := json.Unmarshal(cmd.Buffer().Contents(), &response)
 	Expect(err).NotTo(HaveOccurred())
-	enabled := response.url != ""
+
+	enabled := response.RoutingEndpoint != ""
 	Expect(enabled).To(BeTrue(), "Routing API is not enabled")
 }
 
