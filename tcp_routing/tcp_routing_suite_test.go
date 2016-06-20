@@ -1,6 +1,7 @@
 package tcp_routing_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -65,10 +66,26 @@ var (
 	logger           lager.Logger
 )
 
-var _ = BeforeSuite(func() {
-	routingApiClient = routing_api.NewClient(routingConfig.RoutingApiUrl)
+func checkRoutingApiEnabled() {
+	cmd := cf.Cf("curl", "/v2/info")
+	Expect(cmd.Wait(DEFAULT_TIMEOUT)).To(Exit(0))
 
+	type infoResponse struct {
+		url string `json:"routing_endpoint"`
+	}
+
+	var response infoResponse
+	err := json.Unmarshal(cmd.Buffer().Contents(), &response)
+	Expect(err).NotTo(HaveOccurred())
+	enabled := response.url != ""
+	Expect(enabled).To(BeTrue(), "Routing API is not enabled")
+}
+
+var _ = BeforeSuite(func() {
 	logger = lagertest.NewTestLogger("test")
+
+	checkRoutingApiEnabled()
+	routingApiClient = routing_api.NewClient(routingConfig.RoutingApiUrl)
 
 	uaaClient := newUaaClient(routingConfig, logger)
 	token, err := uaaClient.FetchToken(true)
