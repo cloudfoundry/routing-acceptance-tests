@@ -136,6 +136,6 @@ func newUaaClient(routerApiConfig helpers.RoutingConfig, logger lager.Logger) ua
 func getRouterGroupGuid(routingApiClient routing_api.Client) string {
 	routerGroups, err := routingApiClient.RouterGroups()
 	Expect(err).ToNot(HaveOccurred())
-	Expect(len(routerGroups)).ToNot(Equal(0))
+	Expect(len(routerGroups)).ToNot(Equal(0), "No router groups are available")
 	return routerGroups[0].Guid
 }
