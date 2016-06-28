@@ -1,7 +1,6 @@
 package tcp_routing_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -66,22 +65,6 @@ var (
 	logger           lager.Logger
 )
 
-func checkRoutingApiEnabled() {
-	cmd := cf.Cf("curl", "/v2/info")
-	Expect(cmd.Wait(DEFAULT_TIMEOUT)).To(Exit(0))
-
-	type infoResponse struct {
-		RoutingEndpoint string `json:"routing_endpoint"`
-	}
-
-	var response infoResponse
-	err := json.Unmarshal(cmd.Buffer().Contents(), &response)
-	Expect(err).NotTo(HaveOccurred())
-
-	enabled := response.RoutingEndpoint != ""
-	Expect(enabled).To(BeTrue(), "Routing API is not enabled")
-}
-
 var _ = BeforeSuite(func() {
 	logger = lagertest.NewTestLogger("test")
 	routingApiClient = routing_api.NewClient(routingConfig.RoutingApiUrl)
@@ -91,10 +74,11 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	routingApiClient.SetToken(token.AccessToken)
-	routerGroupGuid := getRouterGroupGuid(routingApiClient)
+	_, err = routingApiClient.Routes()
+	Expect(err).ToNot(HaveOccurred(), "Routing API is not enabled")
 	domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP-DOMAIN-"), routingConfig.AppsDomain)
 	cf.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
-		checkRoutingApiEnabled()
+		routerGroupGuid := getRouterGroupGuid(routingApiClient)
 		routing_helpers.CreateSharedDomain(domainName, routerGroupGuid, DEFAULT_TIMEOUT)
 		Expect(routing_helpers.GetDomainGuid(domainName, DEFAULT_TIMEOUT)).NotTo(BeEmpty())
 	})
