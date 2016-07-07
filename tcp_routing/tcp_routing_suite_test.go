@@ -75,7 +75,7 @@ var _ = BeforeSuite(func() {
 
 	routingApiClient.SetToken(token.AccessToken)
 	_, err = routingApiClient.Routes()
-	Expect(err).ToNot(HaveOccurred(), "Routing API is not enabled")
+	Expect(err).ToNot(HaveOccurred(), "Routing API is unavailable")
 	domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP-DOMAIN-"), routingConfig.AppsDomain)
 	cf.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
 		routerGroupGuid := getRouterGroupGuid(routingApiClient)
