@@ -67,7 +67,7 @@ var (
 
 var _ = BeforeSuite(func() {
 	logger = lagertest.NewTestLogger("test")
-	routingApiClient = routing_api.NewClient(routingConfig.RoutingApiUrl)
+	routingApiClient = routing_api.NewClient(routingConfig.RoutingApiUrl, false)
 
 	uaaClient := newUaaClient(routingConfig, logger)
 	token, err := uaaClient.FetchToken(true)
