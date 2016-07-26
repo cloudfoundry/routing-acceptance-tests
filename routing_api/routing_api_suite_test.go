@@ -18,7 +18,7 @@ func Rtr(args ...string) *Session {
 	portString := strconv.Itoa(routerApiConfig.OAuth.Port)
 	oauthUrl := routerApiConfig.OAuth.TokenEndpoint + ":" + portString
 	args = append(args, "--api", routerApiConfig.RoutingApiUrl, "--client-id", routerApiConfig.OAuth.ClientName, "--client-secret", routerApiConfig.OAuth.ClientSecret, "--oauth-url", oauthUrl)
-	if routerApiConfig.OAuth.SkipSSLValidation {
+	if routerApiConfig.SkipSSLValidation {
 		args = append(args, "--skip-tls-verification")
 	}
 	session, err := Start(exec.Command("rtr", args...), GinkgoWriter, GinkgoWriter)

@@ -17,11 +17,10 @@ type RoutingConfig struct {
 }
 
 type OAuthConfig struct {
-	TokenEndpoint     string `json:"token_endpoint"`
-	ClientName        string `json:"client_name"`
-	ClientSecret      string `json:"client_secret"`
-	Port              int    `json:"port"`
-	SkipSSLValidation bool   `json:"skip_ssl_validation"`
+	TokenEndpoint string `json:"token_endpoint"`
+	ClientName    string `json:"client_name"`
+	ClientSecret  string `json:"client_secret"`
+	Port          int    `json:"port"`
 }
 
 func LoadConfig() RoutingConfig {
@@ -44,7 +43,7 @@ func LoadConfig() RoutingConfig {
 		panic("missing configuration api")
 	}
 
-	loadedConfig.RoutingApiUrl = fmt.Sprintf("%s%s", loadedConfig.Protocol(), loadedConfig.ApiEndpoint)
+	loadedConfig.RoutingApiUrl = fmt.Sprintf("https://%s", loadedConfig.ApiEndpoint)
 
 	return loadedConfig
 }
@@ -75,14 +74,6 @@ func configPath() string {
 	}
 
 	return path
-}
-
-func (c RoutingConfig) Protocol() string {
-	if c.UseHttp {
-		return "http://"
-	} else {
-		return "https://"
-	}
 }
 
 func RandomName() string {

@@ -67,7 +67,7 @@ var (
 
 var _ = BeforeSuite(func() {
 	logger = lagertest.NewTestLogger("test")
-	routingApiClient = routing_api.NewClient(routingConfig.RoutingApiUrl, false)
+	routingApiClient = routing_api.NewClient(routingConfig.RoutingApiUrl, routingConfig.SkipSSLValidation)
 
 	uaaClient := newUaaClient(routingConfig, logger)
 	token, err := uaaClient.FetchToken(true)
@@ -100,7 +100,7 @@ func newUaaClient(routerApiConfig helpers.RoutingConfig, logger lager.Logger) ua
 
 	cfg := &uaaconfig.Config{
 		UaaEndpoint:           tokenURL,
-		SkipVerification:      routerApiConfig.OAuth.SkipSSLValidation,
+		SkipVerification:      routerApiConfig.SkipSSLValidation,
 		ClientName:            routerApiConfig.OAuth.ClientName,
 		ClientSecret:          routerApiConfig.OAuth.ClientSecret,
 		MaxNumberOfRetries:    3,
