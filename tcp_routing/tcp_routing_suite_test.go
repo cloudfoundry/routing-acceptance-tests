@@ -15,12 +15,12 @@ import (
 
 	routing_helpers "code.cloudfoundry.org/cf-routing-test-helpers/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
+	"code.cloudfoundry.org/routing-api"
 	uaaclient "code.cloudfoundry.org/uaa-go-client"
 	uaaconfig "code.cloudfoundry.org/uaa-go-client/config"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/generator"
 	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
-	routing_api "github.com/cloudfoundry-incubator/routing-api"
 )
 
 func TestTcpRouting(t *testing.T) {
