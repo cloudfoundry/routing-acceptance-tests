@@ -3,7 +3,7 @@ package routing_api
 import (
 	"time"
 
-	"github.com/cloudfoundry-incubator/routing-acceptance-tests/helpers"
+	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
