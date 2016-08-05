@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/cf-routing-test-helpers/helpers"
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers/assets"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
-	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
