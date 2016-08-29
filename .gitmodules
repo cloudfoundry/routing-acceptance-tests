@@ -37,12 +37,6 @@
 [submodule "vendor/code.cloudfoundry.org/uaa-go-client"]
 	path = vendor/code.cloudfoundry.org/uaa-go-client
 	url = https://github.com/cloudfoundry-incubator/uaa-go-client
-[submodule "code.cloudfoundry.org/trace-logger"]
-	path = code.cloudfoundry.org/trace-logger
-	url = https://github.com/cloudfoundry-incubator/trace-logger
-[submodule "tedsuo/rata"]
-	path = tedsuo/rata
-	url = https://github.com/tedsuo/rata
 [submodule "vendor/code.cloudfoundry.org/trace-logger"]
 	path = vendor/code.cloudfoundry.org/trace-logger
 	url = https://github.com/cloudfoundry-incubator/trace-logger
