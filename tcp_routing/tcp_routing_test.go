@@ -11,7 +11,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers/assets"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
-	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
+	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -296,8 +296,8 @@ func sendAndReceive(addr string, externalPort uint16) (string, error) {
 	return string(buff), conn.Close()
 }
 
-func updateOrgQuota(context cf_helpers.SuiteContext) {
-	cf.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
+func updateOrgQuota(context cfworkflow_helpers.SuiteContext) {
+	cfworkflow_helpers.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
 		orgGuid := cf.Cf("org", context.RegularUserContext().Org, "--guid").Wait(context.ShortTimeout()).Out.Contents()
 
 		quotaUrl, err := helpers.GetOrgQuotaDefinitionUrl(string(orgGuid), context.ShortTimeout())

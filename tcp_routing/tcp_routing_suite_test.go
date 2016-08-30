@@ -18,9 +18,9 @@ import (
 	"code.cloudfoundry.org/routing-api"
 	uaaclient "code.cloudfoundry.org/uaa-go-client"
 	uaaconfig "code.cloudfoundry.org/uaa-go-client/config"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/generator"
 	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
+	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
 )
 
 func TestTcpRouting(t *testing.T) {
@@ -39,8 +39,8 @@ func TestTcpRouting(t *testing.T) {
 
 	rs := []Reporter{}
 
-	context = cf_helpers.NewContext(routingConfig.Config)
-	environment = cf_helpers.NewEnvironment(context)
+	context = cfworkflow_helpers.NewContext(routingConfig.Config)
+	environment = cfworkflow_helpers.NewEnvironment(context)
 
 	if routingConfig.ArtifactsDirectory != "" {
 		cf_helpers.EnableCFTrace(routingConfig.Config, componentName)
@@ -60,8 +60,8 @@ var (
 
 	routingConfig    helpers.RoutingConfig
 	routingApiClient routing_api.Client
-	context          cf_helpers.SuiteContext
-	environment      *cf_helpers.Environment
+	context          cfworkflow_helpers.SuiteContext
+	environment      *cfworkflow_helpers.Environment
 	logger           lager.Logger
 )
 
@@ -77,7 +77,7 @@ var _ = BeforeSuite(func() {
 	_, err = routingApiClient.Routes()
 	Expect(err).ToNot(HaveOccurred(), "Routing API is unavailable")
 	domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP", "DOMAIN"), routingConfig.AppsDomain)
-	cf.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
+	cfworkflow_helpers.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
 		routerGroupGuid := getRouterGroupGuid(routingApiClient)
 		routing_helpers.CreateSharedDomain(domainName, routerGroupGuid, DEFAULT_TIMEOUT)
 		Expect(routing_helpers.GetDomainGuid(domainName, DEFAULT_TIMEOUT)).NotTo(BeEmpty())
@@ -88,7 +88,7 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	environment.Teardown()
-	cf.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
+	cfworkflow_helpers.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
 		routing_helpers.DeleteSharedDomain(domainName, DEFAULT_TIMEOUT)
 	})
 	CleanupBuildArtifacts()

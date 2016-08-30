@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
+	"github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	"github.com/nu7hatch/gouuid"
 )
 
 type RoutingConfig struct {
-	helpers.Config
+	config.Config
 	RoutingApiUrl string       `json:"-"` //"-" is used for ignoring field
 	Addresses     []string     `json:"addresses"`
 	OAuth         *OAuthConfig `json:"oauth"`
@@ -25,7 +25,7 @@ type OAuthConfig struct {
 
 func LoadConfig() RoutingConfig {
 	loadedConfig := loadConfigJsonFromPath()
-	loadedConfig.Config = helpers.LoadConfig()
+	loadedConfig.Config = config.LoadConfig()
 
 	if loadedConfig.OAuth == nil {
 		panic("missing configuration oauth")
