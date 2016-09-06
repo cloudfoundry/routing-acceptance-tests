@@ -1,6 +1,7 @@
 package routing_api
 
 import (
+	"io/ioutil"
 	"time"
 
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
@@ -34,17 +35,37 @@ var _ = Describe("Registration", func() {
 		It("can register, list, subscribe to sse and unregister routes", func() {
 			args := []string{"events", "--http"}
 			eventsSession = Rtr(args...)
-			Eventually(eventsSession.Out, 70*time.Second).Should(Say("port"))
-			Eventually(eventsSession.Out, 70*time.Second).Should(Say("route"))
+
+			var eventsSessionLogs []byte
+			Eventually(func() []byte {
+				logAdd, err := ioutil.ReadAll(eventsSession.Out)
+				Expect(err).ToNot(HaveOccurred())
+				eventsSessionLogs = append(eventsSessionLogs, logAdd...)
+				return eventsSessionLogs
+			}, 70*time.Second).Should(SatisfyAll(
+				ContainSubstring(`"port":`),
+				ContainSubstring(`"route":`),
+				ContainSubstring(`"Action":"Upsert"`),
+			))
+
+			eventsSessionLogs = nil
 
 			args = []string{"register", routeJSON}
 			session := Rtr(args...)
 			Eventually(session.Out, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(Say("Successfully registered routes"))
-			Eventually(eventsSession.Out, 10*time.Second).Should(Say(route))
-			Eventually(eventsSession.Out).Should(Say(`"port":65340`))
-			Eventually(eventsSession.Out).Should(Say(`"ip":"1.2.3.4"`))
-			Eventually(eventsSession.Out).Should(Say(`"ttl":60`))
-			Eventually(eventsSession.Out).Should(Say(`"Action":"Upsert"`))
+
+			Eventually(func() []byte {
+				logAdd, err := ioutil.ReadAll(eventsSession.Out)
+				Expect(err).ToNot(HaveOccurred())
+				eventsSessionLogs = append(eventsSessionLogs, logAdd...)
+				return eventsSessionLogs
+			}, 10*time.Second).Should(SatisfyAll(
+				ContainSubstring(route),
+				ContainSubstring(`"port":65340`),
+				ContainSubstring(`"ip":"1.2.3.4"`),
+				ContainSubstring(`"ttl":60`),
+				ContainSubstring(`"Action":"Upsert"`),
+			))
 
 			args = []string{"list"}
 			session = Rtr(args...)
