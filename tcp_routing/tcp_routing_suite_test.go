@@ -7,6 +7,7 @@ import (
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/routing-api/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gexec"
@@ -118,8 +119,12 @@ func newUaaClient(routerApiConfig helpers.RoutingConfig, logger lager.Logger) ua
 }
 
 func getRouterGroupGuid(routingApiClient routing_api.Client) string {
-	routerGroups, err := routingApiClient.RouterGroups()
-	Expect(err).ToNot(HaveOccurred())
+	var routerGroups []models.RouterGroup
+	Eventually(func() error {
+		var err error
+		routerGroups, err = routingApiClient.RouterGroups()
+		return err
+	}, "30s", "1s").ShouldNot(HaveOccurred(), "Failed to connect to Routing API server after 30s.")
 	Expect(len(routerGroups)).ToNot(Equal(0), "No router groups are available")
 	return routerGroups[0].Guid
 }

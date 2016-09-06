@@ -37,11 +37,11 @@ var _ = Describe("Registration", func() {
 			eventsSession = Rtr(args...)
 
 			var eventsSessionLogs []byte
-			Eventually(func() []byte {
+			Eventually(func() string {
 				logAdd, err := ioutil.ReadAll(eventsSession.Out)
 				Expect(err).ToNot(HaveOccurred())
 				eventsSessionLogs = append(eventsSessionLogs, logAdd...)
-				return eventsSessionLogs
+				return string(eventsSessionLogs)
 			}, 70*time.Second).Should(SatisfyAll(
 				ContainSubstring(`"port":`),
 				ContainSubstring(`"route":`),
@@ -54,11 +54,11 @@ var _ = Describe("Registration", func() {
 			session := Rtr(args...)
 			Eventually(session.Out, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(Say("Successfully registered routes"))
 
-			Eventually(func() []byte {
+			Eventually(func() string {
 				logAdd, err := ioutil.ReadAll(eventsSession.Out)
 				Expect(err).ToNot(HaveOccurred())
 				eventsSessionLogs = append(eventsSessionLogs, logAdd...)
-				return eventsSessionLogs
+				return string(eventsSessionLogs)
 			}, 10*time.Second).Should(SatisfyAll(
 				ContainSubstring(route),
 				ContainSubstring(`"port":65340`),
