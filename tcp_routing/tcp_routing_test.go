@@ -39,7 +39,7 @@ var _ = Describe("Tcp Routing", func() {
 			externalPort1 = helpers.CreateTcpRouteWithRandomPort(spaceName, domainName, DEFAULT_TIMEOUT)
 
 			// Uses --no-route flag so there is no HTTP route
-			helpers.PushAppNoStart(appName, tcpDropletReceiver, routingConfig.GoBuildpackName, domainName, CF_PUSH_TIMEOUT, "-c", cmd, "--no-route")
+			helpers.PushAppNoStart(appName, tcpDropletReceiver, routingConfig.GoBuildpackName, domainName, CF_PUSH_TIMEOUT, "256M", "-c", cmd, "--no-route")
 			helpers.EnableDiego(appName, DEFAULT_TIMEOUT)
 			helpers.UpdatePorts(appName, []uint16{3333}, DEFAULT_TIMEOUT)
 			helpers.CreateRouteMapping(appName, "", externalPort1, 3333, DEFAULT_TIMEOUT)
@@ -76,7 +76,7 @@ var _ = Describe("Tcp Routing", func() {
 				cmd := fmt.Sprintf("tcp-droplet-receiver --serverId=%s", serverId2)
 
 				// Uses --no-route flag so there is no HTTP route
-				helpers.PushAppNoStart(secondAppName, tcpDropletReceiver, routingConfig.GoBuildpackName, domainName, CF_PUSH_TIMEOUT, "-c", cmd, "--no-route")
+				helpers.PushAppNoStart(secondAppName, tcpDropletReceiver, routingConfig.GoBuildpackName, domainName, CF_PUSH_TIMEOUT, "256M", "-c", cmd, "--no-route")
 				helpers.EnableDiego(secondAppName, DEFAULT_TIMEOUT)
 				helpers.UpdatePorts(secondAppName, []uint16{3333}, DEFAULT_TIMEOUT)
 				helpers.CreateRouteMapping(secondAppName, "", externalPort1, 3333, DEFAULT_TIMEOUT)
@@ -160,7 +160,7 @@ var _ = Describe("Tcp Routing", func() {
 			externalPort1 = helpers.CreateTcpRouteWithRandomPort(spaceName, domainName, DEFAULT_TIMEOUT)
 
 			// Uses --no-route flag so there is no HTTP route
-			helpers.PushAppNoStart(appName, tcpSampleReceiver, routingConfig.GoBuildpackName, domainName, CF_PUSH_TIMEOUT, "-c", cmd, "--no-route")
+			helpers.PushAppNoStart(appName, tcpSampleReceiver, routingConfig.GoBuildpackName, domainName, CF_PUSH_TIMEOUT, "256M", "-c", cmd, "--no-route")
 			helpers.EnableDiego(appName, DEFAULT_TIMEOUT)
 			helpers.UpdatePorts(appName, []uint16{appPort1, appPort2}, DEFAULT_TIMEOUT)
 			helpers.CreateRouteMapping(appName, "", externalPort1, appPort1, DEFAULT_TIMEOUT)
