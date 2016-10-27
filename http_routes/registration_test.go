@@ -1,4 +1,4 @@
-package routing_api
+package http_routes
 
 import (
 	"io/ioutil"

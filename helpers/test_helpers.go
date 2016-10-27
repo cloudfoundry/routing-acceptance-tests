@@ -11,9 +11,10 @@ import (
 
 type RoutingConfig struct {
 	config.Config
-	RoutingApiUrl string       `json:"-"` //"-" is used for ignoring field
-	Addresses     []string     `json:"addresses"`
-	OAuth         *OAuthConfig `json:"oauth"`
+	RoutingApiUrl     string       `json:"-"` //"-" is used for ignoring field
+	Addresses         []string     `json:"addresses"`
+	OAuth             *OAuthConfig `json:"oauth"`
+	IncludeHttpRoutes bool         `json:"include_http_routes"`
 }
 
 type OAuthConfig struct {

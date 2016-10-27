@@ -1,4 +1,4 @@
-package routing_api
+package http_routes
 
 import (
 	"os/exec"
@@ -45,5 +45,11 @@ func TestRouting(t *testing.T) {
 		Expect(routerApiConfig.OAuth.ClientSecret).ToNot(Equal(""), "Must provide a client secret for the routing suite")
 	})
 
-	RunSpecs(t, "Routing API Suite")
+	BeforeEach(func() {
+		if !routerApiConfig.IncludeHttpRoutes {
+			Skip("Skipping this test because Config.IncludeHttpRoutes is set to `false`.")
+		}
+	})
+
+	RunSpecs(t, "HTTP Routes Suite")
 }
