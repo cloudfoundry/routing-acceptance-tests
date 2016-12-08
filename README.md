@@ -58,5 +58,5 @@ Note:
 After correctly setting the `CONFIG` environment variable, the following command will run the tests:
 
 ```
-    ./bin/test
+    bin/test
 ```
