@@ -2,12 +2,13 @@ package tcp_routing_test
 
 import (
 	"fmt"
+	"os"
+	"regexp"
 	"time"
 
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/routing-api/models"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gexec"
@@ -19,6 +20,7 @@ import (
 	"code.cloudfoundry.org/routing-api"
 	uaaclient "code.cloudfoundry.org/uaa-go-client"
 	uaaconfig "code.cloudfoundry.org/uaa-go-client/config"
+	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/generator"
 	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
@@ -119,12 +121,25 @@ func newUaaClient(routerApiConfig helpers.RoutingConfig, logger lager.Logger) ua
 }
 
 func getRouterGroupGuid(routingApiClient routing_api.Client) string {
-	var routerGroups []models.RouterGroup
-	Eventually(func() error {
-		var err error
-		routerGroups, err = routingApiClient.RouterGroups()
-		return err
-	}, "30s", "1s").ShouldNot(HaveOccurred(), "Failed to connect to Routing API server after 30s.")
-	Expect(len(routerGroups)).ToNot(Equal(0), "No router groups are available")
-	return routerGroups[0].Guid
+	os.Setenv("CF_TRACE", "true")
+	var routerGroupGuid string
+	cfworkflow_helpers.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
+		routerGroupOutput := cf.Cf("router-groups").Wait(context.ShortTimeout()).Out.Contents()
+		routerGroupGuid = grabGuid(string(routerGroupOutput))
+	})
+	os.Setenv("CF_TRACE", "false")
+	return routerGroupGuid
+}
+
+func grabGuid(logLines string) string {
+	defer GinkgoRecover()
+	var re *regexp.Regexp
+
+	re = regexp.MustCompile("guid\":\"([0-9a-fA-F-]*)\"")
+
+	matches := re.FindStringSubmatch(logLines)
+
+	Expect(len(matches)).To(BeNumerically(">=", 2))
+	// guid
+	return matches[1]
 }
