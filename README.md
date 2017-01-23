@@ -49,6 +49,7 @@ export CONFIG=$PWD/integration_config.json
 
 Note:
 - The `addresses` property contains the IP addresses of the TCP Routers and/or the Load Balancer's IP address. IP `10.24.14.2` is IP address of `tcp_router_z1/0` job in routing-release. If this IP address happens to be different in your deployment then change the entry accordingly.
+- The `addresses` property also accepts DNS entry for tcp router. For ex: `tcp.bosh-lite.com`
 - `admin_user` and `admin_password` properties refer to the admin user used to perform a CF login with the cf CLI.
 - `skip_ssl_validation` is used for the cf CLI when targeting an environment.
 - `include_http_routes` boolean used to run tests for the experimental HTTP routing endpoints of the Routing API.
