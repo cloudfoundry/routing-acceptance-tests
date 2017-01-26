@@ -37,13 +37,9 @@ func TestTcpRouting(t *testing.T) {
 	if routingConfig.CfPushTimeout > 0 {
 		CF_PUSH_TIMEOUT = routingConfig.CfPushTimeout * time.Second
 	}
-
 	componentName := "TCP Routing"
 
 	rs := []Reporter{}
-
-	context = cfworkflow_helpers.NewContext(routingConfig.Config)
-	environment = cfworkflow_helpers.NewEnvironment(context)
 
 	if routingConfig.ArtifactsDirectory != "" {
 		cf_helpers.EnableCFTrace(routingConfig.Config, componentName)
@@ -61,6 +57,7 @@ var (
 	CF_PUSH_TIMEOUT          = 2 * time.Minute
 	domainName               string
 
+	adminContext     cfworkflow_helpers.UserContext
 	routingConfig    helpers.RoutingConfig
 	routingApiClient routing_api.Client
 	context          cfworkflow_helpers.SuiteContext
@@ -69,6 +66,9 @@ var (
 )
 
 var _ = BeforeSuite(func() {
+	context = cfworkflow_helpers.NewContext(routingConfig.Config)
+	environment = cfworkflow_helpers.NewEnvironment(context)
+
 	logger = lagertest.NewTestLogger("test")
 	routingApiClient = routing_api.NewClient(routingConfig.RoutingApiUrl, routingConfig.SkipSSLValidation)
 
@@ -80,20 +80,27 @@ var _ = BeforeSuite(func() {
 	_, err = routingApiClient.Routes()
 	Expect(err).ToNot(HaveOccurred(), "Routing API is unavailable")
 	domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP", "DOMAIN"), routingConfig.AppsDomain)
-	cfworkflow_helpers.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
-		routerGroupGuid := getRouterGroupGuid(routingApiClient)
-		routing_helpers.CreateSharedDomain(domainName, routerGroupGuid, DEFAULT_TIMEOUT)
-		Expect(routing_helpers.GetDomainGuid(domainName, DEFAULT_TIMEOUT)).NotTo(BeEmpty())
-	})
+
+	adminContext = context.AdminUserContext()
+	regUser := context.RegularUserContext()
+	adminContext.Org = regUser.Org
+	adminContext.Space = regUser.Space
 
 	environment.Setup()
+
+	cfworkflow_helpers.AsUser(adminContext, context.ShortTimeout(), func() {
+		routerGroupName := getRouterGroupName(routingApiClient)
+		routing_helpers.CreateSharedDomain(domainName, routerGroupName, DEFAULT_TIMEOUT)
+		routing_helpers.VerifySharedDomain(domainName, DEFAULT_TIMEOUT)
+	})
+
 })
 
 var _ = AfterSuite(func() {
-	environment.Teardown()
-	cfworkflow_helpers.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
+	cfworkflow_helpers.AsUser(adminContext, context.ShortTimeout(), func() {
 		routing_helpers.DeleteSharedDomain(domainName, DEFAULT_TIMEOUT)
 	})
+	environment.Teardown()
 	CleanupBuildArtifacts()
 })
 
@@ -120,26 +127,26 @@ func newUaaClient(routerApiConfig helpers.RoutingConfig, logger lager.Logger) ua
 	return uaaClient
 }
 
-func getRouterGroupGuid(routingApiClient routing_api.Client) string {
+func getRouterGroupName(routingApiClient routing_api.Client) string {
 	os.Setenv("CF_TRACE", "true")
-	var routerGroupGuid string
+	var routerGroupName string
 	cfworkflow_helpers.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
 		routerGroupOutput := cf.Cf("router-groups").Wait(context.ShortTimeout()).Out.Contents()
-		routerGroupGuid = grabGuid(string(routerGroupOutput))
+		routerGroupName = grabName(string(routerGroupOutput))
 	})
 	os.Setenv("CF_TRACE", "false")
-	return routerGroupGuid
+	return routerGroupName
 }
 
-func grabGuid(logLines string) string {
+func grabName(logLines string) string {
 	defer GinkgoRecover()
 	var re *regexp.Regexp
 
-	re = regexp.MustCompile("guid\":\"([0-9a-fA-F-]*)\"")
+	re = regexp.MustCompile("name\":\"([a-zA-Z-]*)\"")
 
 	matches := re.FindStringSubmatch(logLines)
 
 	Expect(len(matches)).To(BeNumerically(">=", 2))
-	// guid
+	// name
 	return matches[1]
 }
