@@ -4,22 +4,20 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
 	http.HandleFunc("/", hello)
-	http.HandleFunc("/requesturi/", echo)
-	fmt.Println("listening...")
-	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	port := os.Getenv("PORT")
+	fmt.Printf("Listening on %s...", port)
+	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func hello(res http.ResponseWriter, req *http.Request) {
+	fmt.Println("Recieved request ", time.Now())
 	fmt.Fprintln(res, "go, world")
-}
-
-func echo(res http.ResponseWriter, req *http.Request) {
-	fmt.Fprintln(res, fmt.Sprintf("Request URI is [%s]\nQuery String is [%s]", req.RequestURI, req.URL.RawQuery))
 }
