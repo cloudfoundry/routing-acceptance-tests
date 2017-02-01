@@ -83,7 +83,7 @@ var _ = BeforeSuite(func() {
 	environment.Setup()
 
 	cfworkflow_helpers.AsUser(adminContext, context.ShortTimeout(), func() {
-		routerGroupName := helpers.GetRouterGroupName(routingApiClient, context)
+		routerGroupName := helpers.GetRouterGroupName(context)
 		routing_helpers.CreateSharedDomain(domainName, routerGroupName, DEFAULT_TIMEOUT)
 		routing_helpers.VerifySharedDomain(domainName, DEFAULT_TIMEOUT)
 	})

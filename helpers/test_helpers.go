@@ -28,7 +28,7 @@ type RoutingConfig struct {
 	Addresses         []string     `json:"addresses"`
 	OAuth             *OAuthConfig `json:"oauth"`
 	IncludeHttpRoutes bool         `json:"include_http_routes"`
-	TcpAppDomain      string       `json:"tcp_app_domain"`
+	TcpAppDomain      string       `json:"tcp_apps_domain"`
 	LBConfigured      bool         `json:"lb_configured"`
 }
 
@@ -120,7 +120,6 @@ func UpdateOrgQuota(context cfworkflow_helpers.SuiteContext) {
 
 		cf.Cf("curl", quotaUrl, "-X", "PUT", "-d", "'{\"total_reserved_route_ports\":-1}'").Wait(context.ShortTimeout())
 	})
-	os.Setenv("CF_TRACE", "true")
 }
 
 func loadConfigJsonFromPath() RoutingConfig {

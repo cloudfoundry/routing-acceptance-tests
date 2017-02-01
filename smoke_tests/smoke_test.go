@@ -6,6 +6,7 @@ import (
 
 	routing_helpers "code.cloudfoundry.org/cf-routing-test-helpers/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
+	"code.cloudfoundry.org/routing-acceptance-tests/helpers/assets"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/generator"
 	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
 
@@ -14,6 +15,12 @@ import (
 )
 
 var routerIps []string
+var (
+	appName         string
+	domainName      string
+	tcpSampleGolang = assets.NewAssets().TcpSampleGolang
+	adminContext    cfworkflow_helpers.UserContext
+)
 
 var _ = Describe("SmokeTests", func() {
 
@@ -46,9 +53,12 @@ var _ = Describe("SmokeTests", func() {
 	})
 
 	AfterEach(func() {
+		routing_helpers.AppReport(appName, DEFAULT_TIMEOUT)
 		routing_helpers.DeleteApp(appName, DEFAULT_TIMEOUT)
 		if routingConfig.TcpAppDomain == "" {
-			routing_helpers.DeleteSharedDomain(domainName, DEFAULT_TIMEOUT)
+			cfworkflow_helpers.AsUser(adminContext, context.ShortTimeout(), func() {
+				routing_helpers.DeleteSharedDomain(domainName, DEFAULT_TIMEOUT)
+			})
 		}
 	})
 

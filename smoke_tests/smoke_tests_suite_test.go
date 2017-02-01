@@ -6,7 +6,6 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
-	"code.cloudfoundry.org/routing-acceptance-tests/helpers/assets"
 	"code.cloudfoundry.org/routing-api"
 	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
@@ -22,13 +21,8 @@ var (
 	DEFAULT_POLLING_INTERVAL = 5 * time.Second
 	CF_PUSH_TIMEOUT          = 2 * time.Minute
 	routingConfig            helpers.RoutingConfig
-	domainName               string
-	appName                  string
-	tcpSampleGolang          = assets.NewAssets().TcpSampleGolang
-	adminContext             cfworkflow_helpers.UserContext
 	context                  cfworkflow_helpers.SuiteContext
 	environment              *cfworkflow_helpers.Environment
-	newTcpDomain             bool
 )
 
 func TestSmokeTests(t *testing.T) {
