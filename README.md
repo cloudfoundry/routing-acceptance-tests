@@ -4,11 +4,11 @@ This test suite exercises [Cloud Foundry Routing](https://github.com/cloudfoundr
 
 **Note**: This repository should be imported as `code.cloudfoundry.org/routing-acceptance-tests`.
 
-## Running Acceptance tests
+## Running test suites
 
 ### Test setup
 
-To run the Routing Acceptance tests, you will need:
+To run the Routing Acceptance tests or Smoke tests, you will need:
 - a running deployment of [routing-release](https://github.com/cloudfoundry-incubator/routing-release)
 - the latest version of the [rtr CLI](https://github.com/cloudfoundry-incubator/routing-api-cli/releases)
 - an environment variable `CONFIG` which points to a `.json` file that contains the router api endpoint
@@ -22,6 +22,7 @@ source .envrc
 
 The following commands will create a config file `integration_config.json` for a [bosh-lite](https://github.com/cloudfoundry/bosh-lite) installation and set the `CONFIG` environment variable to the path for this file. Edit `integration_config.json` as appropriate for your environment.
 
+### Running Acceptance tests
 
 ```bash
 cd ~/workspace/routing-release/src/code.cloudfoundry.org/routing-acceptance-tests/
@@ -45,6 +46,8 @@ cat > integration_config.json <<EOF
 }
 EOF
 export CONFIG=$PWD/integration_config.json
+./bin/test
+
 ```
 
 Note:
@@ -54,10 +57,34 @@ Note:
 - `skip_ssl_validation` is used for the cf CLI when targeting an environment.
 - `include_http_routes` boolean used to run tests for the experimental HTTP routing endpoints of the Routing API.
 
-### Running the tests
+### Running Smoke tests
 
-After correctly setting the `CONFIG` environment variable, the following command will run the tests:
+```bash
+cd ~/workspace/routing-release/src/code.cloudfoundry.org/routing-acceptance-tests/
+cat > integration_config.json <<EOF
+{
+  "addresses": ["10.244.14.2"],
+  "api": "api.bosh-lite.com",
+  "admin_user": "admin",
+  "admin_password": "admin",
+  "skip_ssl_validation": true,
+  "use_http":true,
+  "apps_domain": "bosh-lite.com",
+  "tcp_apps_domain": "tcp.bosh-lite.com",
+  "oauth": {
+    "token_endpoint": "https://uaa.bosh-lite.com",
+    "client_name": "tcp_emitter",
+    "client_secret": "tcp-emitter-secret",
+    "port": 443,
+    "skip_ssl_validation": true
+  }
+}
+EOF
+export CONFIG=$PWD/integration_config.json
+./bin/smoke_tests
 
 ```
-    ./bin/test
-```
+
+Note:
+- All the notes for Acceptance tests also apply here.
+- If `tcp_apps_domain` property is empty, smoke tests create a temporary shared domain and use the `addresses` field to connect to TCP application.
