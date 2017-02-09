@@ -3,6 +3,7 @@ package smoke_test
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	routing_helpers "code.cloudfoundry.org/cf-routing-test-helpers/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
@@ -84,15 +85,19 @@ var _ = Describe("SmokeTests", func() {
 
 func curlAppSuccess(domainName, port string) {
 	appUrl := fmt.Sprintf("http://%s:%s", domainName, port)
+	fmt.Fprintf(os.Stdout, "\nConnecting to URL %s... \n", appUrl)
 	resp, err := http.Get(appUrl)
 	Expect(err).NotTo(HaveOccurred())
+	fmt.Fprintf(os.Stdout, "\nReceived response %d\n", resp.StatusCode)
 
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 }
 
 func curlAppFailure(domainName, port string) {
 	appUrl := fmt.Sprintf("http://%s:%s", domainName, port)
+	fmt.Fprintf(os.Stdout, "\nConnecting to URL %s... \n", appUrl)
 
 	_, err := http.Get(appUrl)
+	fmt.Fprintf(os.Stderr, "\nReceived response %s\n", err)
 	Expect(err).To(HaveOccurred())
 }
