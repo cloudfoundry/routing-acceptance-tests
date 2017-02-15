@@ -2,6 +2,7 @@ package smoke_test
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 
@@ -89,15 +90,13 @@ func curlAppSuccess(domainName, port string) {
 	resp, err := http.Get(appUrl)
 	Expect(err).NotTo(HaveOccurred())
 	fmt.Fprintf(os.Stdout, "\nReceived response %d\n", resp.StatusCode)
-
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 }
 
 func curlAppFailure(domainName, port string) {
-	appUrl := fmt.Sprintf("http://%s:%s", domainName, port)
+	appUrl := fmt.Sprintf("%s:%s", domainName, port)
 	fmt.Fprintf(os.Stdout, "\nConnecting to URL %s... \n", appUrl)
-
-	_, err := http.Get(appUrl)
-	fmt.Fprintf(os.Stderr, "\nReceived response %s\n", err)
+	_, err := net.Dial("tcp", appUrl)
 	Expect(err).To(HaveOccurred())
+	fmt.Fprintf(os.Stderr, "\nReceived response %s\n", err.Error())
 }
