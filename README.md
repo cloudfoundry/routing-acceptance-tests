@@ -88,3 +88,4 @@ export CONFIG=$PWD/integration_config.json
 Note:
 - All the notes for Acceptance tests also apply here.
 - If `tcp_apps_domain` property is empty, smoke tests create a temporary shared domain and use the `addresses` field to connect to TCP application.
+- Optionally run the smoke tests in verbose mode: `./bin/smoke_tests -v`.
