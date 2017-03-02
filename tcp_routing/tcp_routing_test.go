@@ -209,34 +209,34 @@ var _ = Describe("Tcp Routing", func() {
 				routing_helpers.CreateRouteMapping(appName, "", externalPort2, appPort2, DEFAULT_TIMEOUT)
 			})
 
-			It("should maps first external port to the first app port", func() {
+			It("should map first external port to the first app port", func() {
 
 				for _, routerAddr := range routingConfig.Addresses {
+					var (
+						resp string
+						err  error
+					)
 					Eventually(func() error {
-						_, err := sendAndReceive(routerAddr, externalPort1)
+						resp, err = sendAndReceive(routerAddr, externalPort1)
 						return err
 					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).ShouldNot(HaveOccurred())
 
-					Eventually(func() string {
-						resp, err := sendAndReceive(routerAddr, externalPort1)
-						Expect(err).ToNot(HaveOccurred())
-						return resp
-					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(ContainSubstring(fmt.Sprintf("%d", appPort1)))
+					Expect(resp).To(ContainSubstring(fmt.Sprintf("%d", appPort1)))
 				}
 			})
 
-			It("should maps second external port to the second app port", func() {
+			It("should map second external port to the second app port", func() {
 				for _, routerAddr := range routingConfig.Addresses {
+					var (
+						resp string
+						err  error
+					)
 					Eventually(func() error {
-						_, err := sendAndReceive(routerAddr, externalPort2)
+						resp, err = sendAndReceive(routerAddr, externalPort2)
 						return err
 					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).ShouldNot(HaveOccurred())
 
-					Eventually(func() string {
-						resp, err := sendAndReceive(routerAddr, externalPort2)
-						Expect(err).ToNot(HaveOccurred())
-						return resp
-					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(ContainSubstring(fmt.Sprintf("%d", appPort2)))
+					Expect(resp).To(ContainSubstring(fmt.Sprintf("%d", appPort2)))
 				}
 			})
 		})
