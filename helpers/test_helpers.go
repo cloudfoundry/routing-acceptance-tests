@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"code.cloudfoundry.org/cf-routing-test-helpers/helpers"
@@ -88,13 +89,12 @@ func NewUaaClient(routerApiConfig RoutingConfig, logger lager.Logger) uaaclient.
 }
 
 func GetRouterGroupName(context cfworkflow_helpers.SuiteContext) string {
-	os.Setenv("CF_TRACE", "true")
+	os.Setenv("CF_TRACE", "false")
 	var routerGroupName string
 	cfworkflow_helpers.AsUser(context.AdminUserContext(), context.ShortTimeout(), func() {
 		routerGroupOutput := cf.Cf("router-groups").Wait(context.ShortTimeout()).Out.Contents()
 		routerGroupName = GrabName(string(routerGroupOutput))
 	})
-	os.Setenv("CF_TRACE", "false")
 	return routerGroupName
 }
 
@@ -102,13 +102,13 @@ func GrabName(logLines string) string {
 	defer GinkgoRecover()
 	var re *regexp.Regexp
 
-	re = regexp.MustCompile("name\":\"([a-zA-Z-]*)\"")
-
+	re = regexp.MustCompile(".*tcp")
 	matches := re.FindStringSubmatch(logLines)
+	Expect(len(matches)).To(BeNumerically(">=", 1))
 
-	Expect(len(matches)).To(BeNumerically(">=", 2))
-	// name
-	return matches[1]
+	names := strings.Split(matches[0], " ")
+	Expect(len(names)).To(BeNumerically(">=", 1))
+	return names[0]
 }
 
 func UpdateOrgQuota(context cfworkflow_helpers.SuiteContext) {
