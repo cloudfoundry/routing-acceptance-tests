@@ -21,11 +21,11 @@ var (
 	DEFAULT_POLLING_INTERVAL = 5 * time.Second
 	CF_PUSH_TIMEOUT          = 2 * time.Minute
 	routingConfig            helpers.RoutingConfig
-	context                  cfworkflow_helpers.SuiteContext
-	environment              *cfworkflow_helpers.Environment
+	environment              *cfworkflow_helpers.ReproducibleTestSuiteSetup
 )
 
 func TestSmokeTests(t *testing.T) {
+	routingConfig = helpers.LoadConfig()
 	RegisterFailHandler(Fail)
 	componentName := "SmokeTests Suite"
 	rs := []Reporter{}
@@ -38,18 +38,16 @@ func TestSmokeTests(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	routingConfig = helpers.LoadConfig()
-	if routingConfig.DefaultTimeout > 0 {
-		DEFAULT_TIMEOUT = routingConfig.DefaultTimeout * time.Second
+	if routingConfig.DefaultTimeoutDuration() > 0 {
+		DEFAULT_TIMEOUT = routingConfig.DefaultTimeoutDuration()
 	}
 
-	if routingConfig.CfPushTimeout > 0 {
-		CF_PUSH_TIMEOUT = routingConfig.CfPushTimeout * time.Second
+	if routingConfig.CfPushTimeoutDuration() > 0 {
+		CF_PUSH_TIMEOUT = routingConfig.CfPushTimeoutDuration()
 	}
 
 	os.Setenv("CF_TRACE", "true")
-	context = cfworkflow_helpers.NewContext(routingConfig.Config)
-	environment = cfworkflow_helpers.NewEnvironment(context)
+	environment = cfworkflow_helpers.NewTestSuiteSetup(routingConfig)
 
 	logger := lagertest.NewTestLogger("test")
 	routingApiClient := routing_api.NewClient(routingConfig.RoutingApiUrl, routingConfig.SkipSSLValidation)
