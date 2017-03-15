@@ -36,6 +36,8 @@ cat > integration_config.json <<EOF
   "use_http":true,
   "apps_domain": "bosh-lite.com",
   "include_http_routes": true,
+  "default_timeout": 120,
+  "cf_push_timeout": 120,
   "oauth": {
     "token_endpoint": "https://uaa.bosh-lite.com",
     "client_name": "tcp_emitter",
