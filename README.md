@@ -38,6 +38,8 @@ cat > integration_config.json <<EOF
   "include_http_routes": true,
   "default_timeout": 120,
   "cf_push_timeout": 120,
+  "verbose": true
+  "test_password":
   "oauth": {
     "token_endpoint": "https://uaa.bosh-lite.com",
     "client_name": "tcp_emitter",
@@ -53,11 +55,12 @@ export CONFIG=$PWD/integration_config.json
 ```
 
 Note:
-- The `addresses` property contains the IP addresses of the TCP Routers and/or the Load Balancer's IP address. IP `10.24.14.2` is IP address of `tcp_router_z1/0` job in routing-release. If this IP address happens to be different in your deployment then change the entry accordingly.
-- The `addresses` property also accepts DNS entry for tcp router. For ex: `tcp.bosh-lite.com`
-- `admin_user` and `admin_password` properties refer to the admin user used to perform a CF login with the cf CLI.
-- `skip_ssl_validation` is used for the cf CLI when targeting an environment.
-- `include_http_routes` boolean used to run tests for the experimental HTTP routing endpoints of the Routing API.
+- `addresses` - contains the IP addresses of the TCP Routers and/or the Load Balancer's IP address. IP `10.24.14.2` is IP address of `tcp_router_z1/0` job in routing-release. If this IP address happens to be different in your deployment then change the entry accordingly. The `addresses` property also accepts DNS entry for tcp router, e.g. `tcp.bosh-lite.com`.
+- `admin_user` and `admin_password` - refer to the admin user used to perform a CF login with the cf CLI.
+- `skip_ssl_validation` - used for the cf CLI when targeting an environment.
+- `include_http_routes` - a boolean used to run tests for the experimental HTTP routing endpoints of the Routing API.
+- `verbose` - a boolean which determines whether to pass the -v flag to the router acceptance tests errand
+- `test_password` -  By default, users created during the routing acceptance tests are configured with random names and passwords. If configured, this property enables specifying the password for users created during the test. `test_password` performs the same function as the manifest property, `user_password`.
 
 ### Running Smoke tests
 
