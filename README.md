@@ -60,7 +60,7 @@ Note:
 - `skip_ssl_validation` - used for the cf CLI when targeting an environment.
 - `include_http_routes` (optional) - a boolean used to run tests for the experimental HTTP routing endpoints of the Routing API.
 - `verbose` (optional) - a boolean which allows for the `-v` flag to be passed when running the router acceptance tests errand
-- `test_password` (optional) -  By default, users created during the routing acceptance tests are configured with random names and passwords. If configured, this property enables specifying the password for users created during the test. `test_password` performs the same function as the manifest property, `user_password`.
+- `test_password` (optional) -  By default, users created during the routing acceptance tests are configured with a random name and password. If manually configured, this property enables specifying the password for the user created during the test. `test_password` performs the same function as the manifest property, `user_password`.
 
 ### Running Smoke tests
 
