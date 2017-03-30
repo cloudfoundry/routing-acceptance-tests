@@ -82,8 +82,9 @@ var _ = BeforeSuite(func() {
 	adminContext.Space = regUser.Space
 
 	environment.Setup()
+
 	cfworkflow_helpers.AsUser(adminContext, adminContext.Timeout, func() {
-		routerGroupName := helpers.GetRouterGroupName(adminContext)
+		routerGroupName := routingConfig.TCPRouterGroup
 		routing_helpers.CreateSharedDomain(domainName, routerGroupName, DEFAULT_TIMEOUT)
 		routing_helpers.VerifySharedDomain(domainName, DEFAULT_TIMEOUT)
 	})

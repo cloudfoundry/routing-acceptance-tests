@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"regexp"
-	"strings"
 	"time"
 
 	"code.cloudfoundry.org/cf-routing-test-helpers/helpers"
@@ -19,7 +17,6 @@ import (
 	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
 	"github.com/nu7hatch/gouuid"
 
-	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
@@ -31,6 +28,7 @@ type RoutingConfig struct {
 	IncludeHttpRoutes bool         `json:"include_http_routes"`
 	TcpAppDomain      string       `json:"tcp_apps_domain"`
 	LBConfigured      bool         `json:"lb_configured"`
+	TCPRouterGroup    string       `json:"tcp_router_group"`
 }
 
 type OAuthConfig struct {
@@ -97,29 +95,6 @@ func NewUaaClient(routerApiConfig RoutingConfig, logger lager.Logger) uaaclient.
 	Expect(err).ToNot(HaveOccurred())
 
 	return uaaClient
-}
-
-func GetRouterGroupName(context cfworkflow_helpers.UserContext) string {
-	os.Setenv("CF_TRACE", "false")
-	var routerGroupName string
-	cfworkflow_helpers.AsUser(context, context.Timeout, func() {
-		routerGroupOutput := cf.Cf("router-groups").Wait(context.Timeout).Out.Contents()
-		routerGroupName = GrabName(string(routerGroupOutput))
-	})
-	return routerGroupName
-}
-
-func GrabName(logLines string) string {
-	defer GinkgoRecover()
-	var re *regexp.Regexp
-
-	re = regexp.MustCompile(".*tcp")
-	matches := re.FindStringSubmatch(logLines)
-	Expect(len(matches)).To(BeNumerically(">=", 1))
-
-	names := strings.Split(matches[0], " ")
-	Expect(len(names)).To(BeNumerically(">=", 1))
-	return names[0]
 }
 
 func UpdateOrgQuota(context cfworkflow_helpers.UserContext) {
