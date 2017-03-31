@@ -59,6 +59,7 @@ var _ = BeforeSuite(func() {
 	routingApiClient.SetToken(token.AccessToken)
 	_, err = routingApiClient.Routes()
 	Expect(err).ToNot(HaveOccurred(), "Routing API is unavailable")
+	helpers.ValidateRouterGroupName(routingApiClient, routingConfig.TCPRouterGroup)
 })
 
 var _ = AfterSuite(func() {

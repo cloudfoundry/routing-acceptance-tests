@@ -12,6 +12,7 @@ import (
 	uaaclient "code.cloudfoundry.org/uaa-go-client"
 	uaaconfig "code.cloudfoundry.org/uaa-go-client/config"
 
+	"code.cloudfoundry.org/routing-api"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
@@ -76,6 +77,19 @@ func LoadConfig() RoutingConfig {
 	loadedConfig.RoutingApiUrl = fmt.Sprintf("https://%s", loadedConfig.ApiEndpoint)
 
 	return loadedConfig
+}
+
+func ValidateRouterGroupName(routingApiClient routing_api.Client, tcpRouterGroup string) {
+	rgs, err := routingApiClient.RouterGroups()
+	Expect(err).NotTo(HaveOccurred())
+	exists := false
+	for _, rg := range rgs {
+		if rg.Name == tcpRouterGroup {
+			Expect(string(rg.Type)).To(Equal("tcp"), "Router Group should be of type TCP")
+			exists = true
+		}
+	}
+	Expect(exists).To(BeTrue(), "Router Group was not found")
 }
 
 func NewUaaClient(routerApiConfig RoutingConfig, logger lager.Logger) uaaclient.Client {

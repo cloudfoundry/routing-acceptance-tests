@@ -45,8 +45,7 @@ var _ = Describe("SmokeTests", func() {
 			domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP", "DOMAIN"), routingConfig.AppsDomain)
 
 			cfworkflow_helpers.AsUser(adminContext, adminContext.Timeout, func() {
-				routerGroupName := helpers.GetRouterGroupName(adminContext)
-				routing_helpers.CreateSharedDomain(domainName, routerGroupName, DEFAULT_TIMEOUT)
+				routing_helpers.CreateSharedDomain(domainName, routingConfig.TCPRouterGroup, DEFAULT_TIMEOUT)
 				routing_helpers.VerifySharedDomain(domainName, DEFAULT_TIMEOUT)
 			})
 			routerIps = routingConfig.Addresses
