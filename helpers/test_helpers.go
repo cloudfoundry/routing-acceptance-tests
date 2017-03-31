@@ -69,6 +69,10 @@ func LoadConfig() RoutingConfig {
 		panic("missing configuration api")
 	}
 
+	if loadedConfig.TCPRouterGroup == "" {
+		panic("missing configuration tcp_router_group")
+	}
+
 	loadedConfig.RoutingApiUrl = fmt.Sprintf("https://%s", loadedConfig.ApiEndpoint)
 
 	return loadedConfig

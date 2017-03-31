@@ -60,6 +60,19 @@ var (
 	logger           lager.Logger
 )
 
+func validateRouterGroupName(routingApiClient routing_api.Client, tcpRouterGroup string) {
+	rgs, err := routingApiClient.RouterGroups()
+	Expect(err).NotTo(HaveOccurred())
+	exists := false
+	for _, rg := range rgs {
+		if rg.Name == tcpRouterGroup {
+			Expect(string(rg.Type)).To(Equal("tcp"), "Router Group should be of type TCP")
+			exists = true
+		}
+	}
+	Expect(exists).To(BeTrue(), "Router Group was not found")
+}
+
 var _ = BeforeSuite(func() {
 	environment = cfworkflow_helpers.NewTestSuiteSetup(routingConfig.Config)
 
@@ -73,6 +86,9 @@ var _ = BeforeSuite(func() {
 	routingApiClient.SetToken(token.AccessToken)
 	_, err = routingApiClient.Routes()
 	Expect(err).ToNot(HaveOccurred(), "Routing API is unavailable")
+
+	validateRouterGroupName(routingApiClient, routingConfig.TCPRouterGroup)
+
 	domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP", "DOMAIN"), routingConfig.AppsDomain)
 
 	adminContext = environment.AdminUserContext()
