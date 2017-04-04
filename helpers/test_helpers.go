@@ -12,7 +12,6 @@ import (
 	uaaclient "code.cloudfoundry.org/uaa-go-client"
 	uaaconfig "code.cloudfoundry.org/uaa-go-client/config"
 
-	"code.cloudfoundry.org/routing-api"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
@@ -79,17 +78,13 @@ func LoadConfig() RoutingConfig {
 	return loadedConfig
 }
 
-func ValidateRouterGroupName(routingApiClient routing_api.Client, tcpRouterGroup string) {
-	rgs, err := routingApiClient.RouterGroups()
-	Expect(err).NotTo(HaveOccurred())
-	exists := false
-	for _, rg := range rgs {
-		if rg.Name == tcpRouterGroup {
-			Expect(string(rg.Type)).To(Equal("tcp"), "Router Group should be of type TCP")
-			exists = true
-		}
-	}
-	Expect(exists).To(BeTrue(), "Router Group was not found")
+func ValidateRouterGroupName(context cfworkflow_helpers.UserContext, tcpRouterGroup string) {
+	var routerGroupOutput string
+	cfworkflow_helpers.AsUser(context, context.Timeout, func() {
+		routerGroupOutput = string(cf.Cf("router-groups").Wait(context.Timeout).Out.Contents())
+	})
+
+	Expect(routerGroupOutput).To(MatchRegexp(fmt.Sprintf("%s\\s+tcp", tcpRouterGroup)))
 }
 
 func NewUaaClient(routerApiConfig RoutingConfig, logger lager.Logger) uaaclient.Client {

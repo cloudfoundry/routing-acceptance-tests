@@ -74,10 +74,6 @@ var _ = BeforeSuite(func() {
 	_, err = routingApiClient.Routes()
 	Expect(err).ToNot(HaveOccurred(), "Routing API is unavailable")
 
-	helpers.ValidateRouterGroupName(routingApiClient, routingConfig.TCPRouterGroup)
-
-	domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP", "DOMAIN"), routingConfig.AppsDomain)
-
 	adminContext = environment.AdminUserContext()
 	regUser := environment.RegularUserContext()
 	adminContext.TestSpace = regUser.TestSpace
@@ -85,6 +81,10 @@ var _ = BeforeSuite(func() {
 	adminContext.Space = regUser.Space
 
 	environment.Setup()
+
+	helpers.ValidateRouterGroupName(adminContext, routingConfig.TCPRouterGroup)
+
+	domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP", "DOMAIN"), routingConfig.AppsDomain)
 
 	cfworkflow_helpers.AsUser(adminContext, adminContext.Timeout, func() {
 		routerGroupName := routingConfig.TCPRouterGroup
