@@ -28,13 +28,6 @@ var (
 var _ = Describe("SmokeTests", func() {
 
 	BeforeEach(func() {
-		adminContext = environment.AdminUserContext()
-		regUser := environment.RegularUserContext()
-		adminContext.TestSpace = regUser.TestSpace
-		adminContext.Org = regUser.Org
-		adminContext.Space = regUser.Space
-		environment.Setup()
-
 		if routingConfig.TcpAppDomain != "" {
 			domainName = routingConfig.TcpAppDomain
 			cfworkflow_helpers.AsUser(adminContext, adminContext.Timeout, func() {

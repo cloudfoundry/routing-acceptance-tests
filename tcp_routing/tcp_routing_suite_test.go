@@ -61,8 +61,6 @@ var (
 )
 
 var _ = BeforeSuite(func() {
-	environment = cfworkflow_helpers.NewTestSuiteSetup(routingConfig.Config)
-
 	logger = lagertest.NewTestLogger("test")
 	routingApiClient = routing_api.NewClient(routingConfig.RoutingApiUrl, routingConfig.SkipSSLValidation)
 
@@ -74,6 +72,7 @@ var _ = BeforeSuite(func() {
 	_, err = routingApiClient.Routes()
 	Expect(err).ToNot(HaveOccurred(), "Routing API is unavailable")
 
+	environment = cfworkflow_helpers.NewTestSuiteSetup(routingConfig.Config)
 	adminContext = environment.AdminUserContext()
 	regUser := environment.RegularUserContext()
 	adminContext.TestSpace = regUser.TestSpace

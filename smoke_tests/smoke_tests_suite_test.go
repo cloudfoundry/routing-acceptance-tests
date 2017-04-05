@@ -48,6 +48,12 @@ var _ = BeforeSuite(func() {
 
 	os.Setenv("CF_TRACE", "true")
 	environment = cfworkflow_helpers.NewTestSuiteSetup(routingConfig)
+	adminContext = environment.AdminUserContext()
+	regUser := environment.RegularUserContext()
+	adminContext.TestSpace = regUser.TestSpace
+	adminContext.Org = regUser.Org
+	adminContext.Space = regUser.Space
+	environment.Setup()
 
 	logger := lagertest.NewTestLogger("test")
 	routingApiClient := routing_api.NewClient(routingConfig.RoutingApiUrl, routingConfig.SkipSSLValidation)
@@ -59,7 +65,7 @@ var _ = BeforeSuite(func() {
 	routingApiClient.SetToken(token.AccessToken)
 	_, err = routingApiClient.Routes()
 	Expect(err).ToNot(HaveOccurred(), "Routing API is unavailable")
-	helpers.ValidateRouterGroupName(routingApiClient, routingConfig.TCPRouterGroup)
+	helpers.ValidateRouterGroupName(adminContext, routingConfig.TCPRouterGroup)
 })
 
 var _ = AfterSuite(func() {
