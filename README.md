@@ -85,7 +85,7 @@ cat > integration_config.json <<EOF
     "port": 443,
     "skip_ssl_validation": true
   },
-  "tcp_router_group": "default-tcp",
+  "tcp_router_group": "default-tcp"
 }
 EOF
 export CONFIG=$PWD/integration_config.json
