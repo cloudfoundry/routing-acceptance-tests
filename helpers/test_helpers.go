@@ -84,7 +84,7 @@ func ValidateRouterGroupName(context cfworkflow_helpers.UserContext, tcpRouterGr
 		routerGroupOutput = string(cf.Cf("router-groups").Wait(context.Timeout).Out.Contents())
 	})
 
-	Expect(routerGroupOutput).To(MatchRegexp(fmt.Sprintf("%s\\s+tcp", tcpRouterGroup)))
+	Expect(routerGroupOutput).To(MatchRegexp(fmt.Sprintf("%s\\s+tcp", tcpRouterGroup)), fmt.Sprintf("Router group %s of type tcp doesn't exist", tcpRouterGroup))
 }
 
 func NewUaaClient(routerApiConfig RoutingConfig, logger lager.Logger) uaaclient.Client {
