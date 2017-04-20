@@ -76,6 +76,7 @@ cat > integration_config.json <<EOF
   "admin_password": "admin",
   "skip_ssl_validation": true,
   "use_http":true,
+  "default_timeout": 120,
   "apps_domain": "bosh-lite.com",
   "tcp_apps_domain": "tcp.bosh-lite.com",
   "oauth": {
