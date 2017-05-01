@@ -94,18 +94,17 @@ var _ = Describe("Tcp Routing", func() {
 						return err
 					}, "30s", DEFAULT_POLLING_INTERVAL).ShouldNot(HaveOccurred())
 
-					Eventually(func() string {
-						serverId, err := getServerResponse(routerAddr, externalPort1)
-						Expect(err).ToNot(HaveOccurred())
-						return serverId
-					}, "20s", DEFAULT_POLLING_INTERVAL).Should(Equal(serverId1))
-
-					Eventually(func() string {
-						serverId, err := getServerResponse(routerAddr, externalPort1)
-						Expect(err).ToNot(HaveOccurred())
-						return serverId
-					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(Equal(serverId2))
-
+					serverResponses := func() []string {
+						var servers []string
+						for i := 0; i < 10; i++ {
+							srv, err := getServerResponse(routerAddr, externalPort1)
+							Expect(err).ToNot(HaveOccurred())
+							servers = append(servers, srv)
+						}
+						return servers
+					}
+					Expect(serverResponses()).To(ContainElement(serverId1))
+					Expect(serverResponses()).To(ContainElement(serverId2))
 				}
 			})
 		})
