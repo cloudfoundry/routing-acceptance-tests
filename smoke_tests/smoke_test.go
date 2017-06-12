@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	routing_helpers "code.cloudfoundry.org/cf-routing-test-helpers/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
@@ -18,11 +19,13 @@ import (
 
 var routerIps []string
 var (
-	appName         string
-	domainName      string
-	tcpSampleGolang = assets.NewAssets().TcpSampleGolang
-	adminContext    cfworkflow_helpers.UserContext
-	regUser         cfworkflow_helpers.UserContext
+	appName                 string
+	domainName              string
+	tcpSampleGolang         = assets.NewAssets().TcpSampleGolang
+	adminContext            cfworkflow_helpers.UserContext
+	DEFAULT_RW_TIMEOUT      = 2 * time.Second
+	DEFAULT_CONNECT_TIMEOUT = 2 * time.Second
+	regUser                 cfworkflow_helpers.UserContext
 )
 
 var _ = Describe("SmokeTests", func() {
@@ -68,6 +71,7 @@ var _ = Describe("SmokeTests", func() {
 		for _, routingAddr := range routerIps {
 			curlAppSuccess(routingAddr, port)
 		}
+
 		// delete the route and verify route is not reachable from all Addresses
 		routing_helpers.DeleteTcpRoute(domainName, port, DEFAULT_TIMEOUT)
 
@@ -88,12 +92,32 @@ func curlAppSuccess(domainName, port string) {
 
 func curlAppFailure(domainName, port string) {
 	appUrl := fmt.Sprintf("%s:%s", domainName, port)
-	Eventually(func() error {
-		fmt.Fprintf(os.Stdout, "\nConnecting to URL %s... \n", appUrl)
-		_, err := net.Dial("tcp", appUrl)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "\nReceived response %s\n", err.Error())
+	fmt.Fprintf(os.Stdout, "\nConnecting to URL %s... \n", appUrl)
+	conn, err := net.DialTimeout("tcp", appUrl, DEFAULT_CONNECT_TIMEOUT)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "\nReceived error while connecting %s\n", err.Error())
+		return
+	}
+
+	defer func() {
+		if conn != nil {
+			conn.Close()
 		}
-		return err
-	}, DEFAULT_TIMEOUT).ShouldNot(BeNil())
+	}()
+
+	err = conn.SetWriteDeadline(time.Now().Add(DEFAULT_RW_TIMEOUT))
+	testBytes := []byte("GET / HTTP/1.1 \n\n")
+	_, err = conn.Write(testBytes)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "\nReceived error while writing to connection %s\n", err.Error())
+		return
+	}
+	err = conn.SetReadDeadline(time.Now().Add(DEFAULT_RW_TIMEOUT))
+	readBytes := make([]byte, 1024)
+	_, err = conn.Read(readBytes)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "\nReceived error while reading from connection %s\n", err.Error())
+	}
+	Expect(err).To(HaveOccurred())
+	return
 }
