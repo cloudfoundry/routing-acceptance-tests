@@ -5,4 +5,4 @@ set -e -x
 go vet ./...
 go install -v github.com/onsi/ginkgo/ginkgo
 
-ginkgo -r -slowSpecThreshold=120 "$@" smoke_tests/
+ginkgo -r -race -slowSpecThreshold=120 "$@" smoke_tests/

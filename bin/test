@@ -7,5 +7,5 @@ go install -v github.com/onsi/ginkgo/ginkgo
 packages=("http_routes" "tcp_routing" "smoke_tests")
 for i in "${packages[@]}"
 do
-  ginkgo -r -slowSpecThreshold=120 "$@" "$i"
+  ginkgo -r -race -slowSpecThreshold=120 "$@" "$i"
 done
