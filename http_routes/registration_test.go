@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("Registration", func() {
 	var (
-		expectedrtrVersion = "2.9"
+		expectedrtrVersion = "2"
 		route              string
 		routeJSON          string
 	)
