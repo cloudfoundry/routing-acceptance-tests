@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"time"
 
 	routing_helpers "code.cloudfoundry.org/cf-routing-test-helpers/helpers"
@@ -83,10 +82,10 @@ var _ = Describe("SmokeTests", func() {
 
 func curlAppSuccess(domainName, port string) {
 	appUrl := fmt.Sprintf("http://%s:%s", domainName, port)
-	fmt.Fprintf(os.Stdout, "\nConnecting to URL %s... \n", appUrl)
+	fmt.Fprintf(GinkgoWriter, "\nConnecting to URL %s... \n", appUrl)
 	resp, err := http.Get(appUrl)
 	Expect(err).NotTo(HaveOccurred())
-	fmt.Fprintf(os.Stdout, "\nReceived response %d\n", resp.StatusCode)
+	fmt.Fprintf(GinkgoWriter, "\nReceived response %d\n", resp.StatusCode)
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 }
 
@@ -94,10 +93,10 @@ func curlAppFailure(domainName, port string) {
 	appUrl := fmt.Sprintf("%s:%s", domainName, port)
 
 	dialTCP := func(url string, connFailed chan struct{}) {
-		fmt.Fprintf(os.Stdout, "\nConnecting to URL %s... \n", appUrl)
+		fmt.Fprintf(GinkgoWriter, "\nConnecting to URL %s... \n", appUrl)
 		conn, err := net.DialTimeout("tcp", appUrl, DEFAULT_CONNECT_TIMEOUT)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "\nReceived error while connecting %s\n", err)
+			fmt.Fprintf(GinkgoWriter, "\nReceived error while connecting %s\n", err)
 			connFailed <- struct{}{}
 			return
 		}
@@ -105,7 +104,7 @@ func curlAppFailure(domainName, port string) {
 
 		err = conn.SetDeadline(time.Now().Add(DEFAULT_RW_TIMEOUT))
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "\nSetting RW deadline %s\n", err)
+			fmt.Fprintf(GinkgoWriter, "\nSetting RW deadline %s\n", err)
 			connFailed <- struct{}{}
 			return
 		}
@@ -113,14 +112,14 @@ func curlAppFailure(domainName, port string) {
 		testBytes := []byte("GET / HTTP/1.1 \n\n")
 		_, err = conn.Write(testBytes)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "\nReceived error while writing to connection %s\n", err)
+			fmt.Fprintf(GinkgoWriter, "\nReceived error while writing to connection %s\n", err)
 			connFailed <- struct{}{}
 			return
 		}
 		readBytes := make([]byte, 1024)
 		_, err = conn.Read(readBytes)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "\nReceived error while reading from connection %s\n", err)
+			fmt.Fprintf(GinkgoWriter, "\nReceived error while reading from connection %s\n", err)
 			connFailed <- struct{}{}
 			return
 		}
