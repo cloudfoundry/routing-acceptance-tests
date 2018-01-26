@@ -269,14 +269,27 @@ func sendAndReceive(addr string, externalPort uint16) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	logger.Info("connected", lager.Data{"address": conn.RemoteAddr()})
 
 	message := []byte(fmt.Sprintf("Time is %d", time.Now().Nanosecond()))
+
 	err = conn.SetWriteDeadline(time.Now().Add(DEFAULT_RW_TIMEOUT))
-	_, err = conn.Write(message)
 	if err != nil {
 		return "", err
 	}
+
+	_, err = conn.Write(message)
+	if err != nil {
+		if ne, ok := err.(*net.OpError); ok {
+			if ne.Temporary() {
+				return sendAndReceive(addr, externalPort)
+			}
+		}
+
+		return "", err
+	}
+
 	logger.Info("wrote-message", lager.Data{"address": conn.RemoteAddr(), "message": string(message)})
 
 	buff := make([]byte, BUFFER_SIZE)
@@ -284,11 +297,19 @@ func sendAndReceive(addr string, externalPort uint16) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	n, err := conn.Read(buff)
 	if err != nil {
 		conn.Close()
+		if ne, ok := err.(*net.OpError); ok {
+			if ne.Temporary() {
+				return sendAndReceive(addr, externalPort)
+			}
+		}
+
 		return "", err
 	}
+
 	logger.Info("read-message", lager.Data{"address": conn.RemoteAddr(), "message": string(buff[:n])})
 
 	return string(buff), conn.Close()
