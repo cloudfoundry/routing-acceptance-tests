@@ -1,6 +1,6 @@
 # Routing Acceptance Tests
 
-This test suite exercises [Cloud Foundry Routing](https://github.com/cloudfoundry-incubator/routing-release) deployment.
+This test suite exercises [Cloud Foundry Routing](https://github.com/cloudfoundry/routing-release) deployment.
 
 **Note**: This repository should be imported as `code.cloudfoundry.org/routing-acceptance-tests`.
 
@@ -9,12 +9,12 @@ This test suite exercises [Cloud Foundry Routing](https://github.com/cloudfoundr
 ### Test setup
 
 To run the Routing Acceptance tests or Smoke tests, you will need:
-- a running deployment of [routing-release](https://github.com/cloudfoundry-incubator/routing-release)
-- the latest version of the [rtr CLI](https://github.com/cloudfoundry-incubator/routing-api-cli/releases)
+- a running deployment of [routing-release](https://github.com/cloudfoundry/routing-release)
+- the latest version of the [rtr CLI](https://github.com/cloudfoundry/routing-api-cli/releases)
 - an environment variable `CONFIG` which points to a `.json` file that contains the router api endpoint
-- environment variable GOPATH set to root directory of [routing-release](https://github.com/cloudfoundry-incubator/routing-release)
+- environment variable GOPATH set to root directory of [routing-release](https://github.com/cloudfoundry/routing-release)
 ```bash
-git clone https://github.com/cloudfoundry-incubator/routing-release.git
+git clone https://github.com/cloudfoundry/routing-release.git
 cd routing-release
 ./scripts/update
 source .envrc
