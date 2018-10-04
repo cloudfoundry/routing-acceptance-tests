@@ -183,16 +183,12 @@ var _ = Describe("Tcp Routing", func() {
 						return err
 					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).ShouldNot(HaveOccurred())
 
-					Eventually(func() string {
-						resp, err := sendAndReceive(routerAddr, externalPort1)
-						Expect(err).ToNot(HaveOccurred())
-						return resp
+					Eventually(func() (string, error) {
+						return sendAndReceive(routerAddr, externalPort1)
 					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(ContainSubstring(fmt.Sprintf("%d", appPort1)))
 
-					Eventually(func() string {
-						resp, err := sendAndReceive(routerAddr, externalPort1)
-						Expect(err).ToNot(HaveOccurred())
-						return resp
+					Eventually(func() (string, error) {
+						return sendAndReceive(routerAddr, externalPort1)
 					}, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(ContainSubstring(fmt.Sprintf("%d", appPort2)))
 				}
 			})
