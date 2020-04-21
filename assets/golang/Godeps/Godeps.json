@@ -1,5 +1,6 @@
 {
 	"ImportPath": "go-online",
-	"GoVersion": "go1.12",
+	"GoVersion": "go1.14",
+	"GodepVersion": "v80",
 	"Deps": []
 }
