@@ -84,6 +84,7 @@ var _ = Describe("Tcp Routing", func() {
 
 			AfterEach(func() {
 				routing_helpers.AppReport(secondAppName, DEFAULT_TIMEOUT)
+				routing_helpers.DeleteTcpRoute(domainName, fmt.Sprintf("%d", externalPort1), DEFAULT_TIMEOUT)
 				routing_helpers.DeleteApp(secondAppName, DEFAULT_TIMEOUT)
 			})
 
