@@ -12,8 +12,6 @@ To run the Routing Acceptance tests or Smoke tests, you will need:
 - a running deployment of [routing-release](https://github.com/cloudfoundry/routing-release)
 - the latest version of the [rtr CLI](https://github.com/cloudfoundry/routing-api-cli/releases)
 - an environment variable `CONFIG` which points to a `.json` file that contains the router api endpoint
-- environment variable GOPATH set to root directory of
-  [routing-release](https://github.com/cloudfoundry/routing-release)
 ```bash
 git clone https://github.com/cloudfoundry/routing-release.git
 cd routing-release
