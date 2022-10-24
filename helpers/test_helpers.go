@@ -1,21 +1,22 @@
 package helpers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"time"
 
 	"code.cloudfoundry.org/cf-routing-test-helpers/helpers"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
-	uaaclient "code.cloudfoundry.org/uaa-go-client"
-	uaaconfig "code.cloudfoundry.org/uaa-go-client/config"
+	"code.cloudfoundry.org/routing-api/uaaclient"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 
 	. "github.com/onsi/gomega"
 )
@@ -87,27 +88,25 @@ func ValidateRouterGroupName(context cfworkflow_helpers.UserContext, tcpRouterGr
 	Expect(routerGroupOutput).To(MatchRegexp(fmt.Sprintf("%s\\s+tcp", tcpRouterGroup)), fmt.Sprintf("Router group %s of type tcp doesn't exist", tcpRouterGroup))
 }
 
-func NewUaaClient(routerApiConfig RoutingConfig, logger lager.Logger) uaaclient.Client {
+func NewTokenFetcher(routerApiConfig RoutingConfig, logger lager.Logger) uaaclient.TokenFetcher {
+	u, err := url.Parse(routerApiConfig.OAuth.TokenEndpoint)
+	Expect(err).ToNot(HaveOccurred())
 
-	tokenURL := fmt.Sprintf("%s:%d", routerApiConfig.OAuth.TokenEndpoint, routerApiConfig.OAuth.Port)
-
-	cfg := &uaaconfig.Config{
-		UaaEndpoint:           tokenURL,
-		SkipVerification:      routerApiConfig.SkipSSLValidation,
-		ClientName:            routerApiConfig.OAuth.ClientName,
-		ClientSecret:          routerApiConfig.OAuth.ClientSecret,
-		MaxNumberOfRetries:    3,
-		RetryInterval:         500 * time.Millisecond,
-		ExpirationBufferInSec: 30,
+	cfg := uaaclient.Config{
+		TokenEndpoint:     u.Host,
+		Port:              routerApiConfig.OAuth.Port,
+		SkipSSLValidation: routerApiConfig.SkipSSLValidation,
+		ClientName:        routerApiConfig.OAuth.ClientName,
+		ClientSecret:      routerApiConfig.OAuth.ClientSecret,
 	}
 
-	uaaClient, err := uaaclient.NewClient(logger, cfg, clock.NewClock())
+	uaaTokenFetcher, err := uaaclient.NewTokenFetcher(false, cfg, clock.NewClock(), 3, 500*time.Millisecond, 30, logger)
 	Expect(err).ToNot(HaveOccurred())
 
-	_, err = uaaClient.FetchToken(true)
+	_, err = uaaTokenFetcher.FetchToken(context.Background(), true)
 	Expect(err).ToNot(HaveOccurred())
 
-	return uaaClient
+	return uaaTokenFetcher
 }
 
 func UpdateOrgQuota(context cfworkflow_helpers.UserContext) {

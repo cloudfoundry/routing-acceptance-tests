@@ -1,6 +1,7 @@
 package tcp_routing_test
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -14,7 +15,7 @@ import (
 
 	routing_helpers "code.cloudfoundry.org/cf-routing-test-helpers/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
-	"code.cloudfoundry.org/routing-api"
+	routing_api "code.cloudfoundry.org/routing-api"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/generator"
 	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
@@ -64,8 +65,8 @@ var _ = BeforeSuite(func() {
 	logger = lagertest.NewTestLogger("test")
 	routingApiClient = routing_api.NewClient(routingConfig.RoutingApiUrl, routingConfig.SkipSSLValidation)
 
-	uaaClient := helpers.NewUaaClient(routingConfig, logger)
-	token, err := uaaClient.FetchToken(true)
+	uaaTokenFetcher := helpers.NewTokenFetcher(routingConfig, logger)
+	token, err := uaaTokenFetcher.FetchToken(context.Background(), true)
 	Expect(err).ToNot(HaveOccurred())
 
 	routingApiClient.SetToken(token.AccessToken)
