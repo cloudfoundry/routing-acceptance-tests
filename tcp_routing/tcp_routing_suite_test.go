@@ -7,7 +7,7 @@ import (
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gexec"
 
@@ -16,9 +16,9 @@ import (
 	routing_helpers "code.cloudfoundry.org/cf-routing-test-helpers/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
 	routing_api "code.cloudfoundry.org/routing-api"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/generator"
-	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
-	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
+	"github.com/cloudfoundry/cf-test-helpers/v2/generator"
+	cf_helpers "github.com/cloudfoundry/cf-test-helpers/v2/helpers"
+	cfworkflow_helpers "github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 )
 
 func TestTcpRouting(t *testing.T) {

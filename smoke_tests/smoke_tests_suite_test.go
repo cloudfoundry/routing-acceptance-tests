@@ -8,9 +8,9 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
 	routing_api "code.cloudfoundry.org/routing-api"
-	cf_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
-	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
-	. "github.com/onsi/ginkgo"
+	cf_helpers "github.com/cloudfoundry/cf-test-helpers/v2/helpers"
+	cfworkflow_helpers "github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gexec"
 

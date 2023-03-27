@@ -3,6 +3,6 @@
 set -e -x
 
 go vet ./...
-go install -v github.com/onsi/ginkgo/ginkgo
+go install -v github.com/onsi/ginkgo/v2/ginkgo
 
 ginkgo -r -race -slowSpecThreshold=120 "$@" smoke_tests/

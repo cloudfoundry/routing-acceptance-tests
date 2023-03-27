@@ -13,9 +13,9 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/routing-api/uaaclient"
 
-	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/config"
-	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
+	cfworkflow_helpers "github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
+	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
+	"github.com/cloudfoundry/cf-test-helpers/v2/config"
 	uuid "github.com/nu7hatch/gouuid"
 
 	. "github.com/onsi/gomega"
