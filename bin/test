@@ -3,7 +3,7 @@
 set -e -x
 
 go vet ./...
-go install -v github.com/onsi/ginkgo/ginkgo
+go install -v github.com/onsi/ginkgo/v2/ginkgo
 packages=("http_routes" "tcp_routing" "smoke_tests")
 for i in "${packages[@]}"
 do

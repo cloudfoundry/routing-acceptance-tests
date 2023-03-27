@@ -12,7 +12,7 @@ import (
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers/assets"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

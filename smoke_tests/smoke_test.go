@@ -9,10 +9,10 @@ import (
 	routing_helpers "code.cloudfoundry.org/cf-routing-test-helpers/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers/assets"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/generator"
-	cfworkflow_helpers "github.com/cloudfoundry-incubator/cf-test-helpers/workflowhelpers"
+	"github.com/cloudfoundry/cf-test-helpers/v2/generator"
+	cfworkflow_helpers "github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
