@@ -8,7 +8,7 @@ import (
 	"time"
 
 	routing_helpers "code.cloudfoundry.org/cf-routing-test-helpers/helpers"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers/assets"
 
