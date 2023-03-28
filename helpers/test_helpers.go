@@ -10,7 +10,7 @@ import (
 
 	"code.cloudfoundry.org/cf-routing-test-helpers/helpers"
 	"code.cloudfoundry.org/clock"
-	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/routing-api/uaaclient"
 
 	cfworkflow_helpers "github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"

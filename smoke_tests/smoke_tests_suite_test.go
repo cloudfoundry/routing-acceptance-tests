@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
 	routing_api "code.cloudfoundry.org/routing-api"
 	cf_helpers "github.com/cloudfoundry/cf-test-helpers/v2/helpers"
