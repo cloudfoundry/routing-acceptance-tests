@@ -19,6 +19,7 @@ import (
 	uuid "github.com/nu7hatch/gouuid"
 
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 )
 
 type RoutingConfig struct {
@@ -116,7 +117,7 @@ func UpdateOrgQuota(context cfworkflow_helpers.UserContext) {
 		quotaUrl, err := helpers.GetOrgQuotaDefinitionUrl(string(orgGuid), context.Timeout)
 		Expect(err).NotTo(HaveOccurred())
 
-		cf.Cf("curl", quotaUrl, "-X", "PUT", "-d", `'{"total_reserved_route_ports":-1}'`).Wait(context.Timeout)
+		Eventually(cf.Cf("curl", quotaUrl, "-X", "PUT", "-d", `'{"total_reserved_route_ports":-1}'`), context.Timeout).Should(gexec.Exit(0))
 	})
 }
 
