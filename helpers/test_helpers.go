@@ -13,9 +13,9 @@ import (
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/routing-api/uaaclient"
 
-	cfworkflow_helpers "github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 	"github.com/cloudfoundry/cf-test-helpers/v2/cf"
 	"github.com/cloudfoundry/cf-test-helpers/v2/config"
+	cfworkflow_helpers "github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 	uuid "github.com/nu7hatch/gouuid"
 
 	. "github.com/onsi/gomega"
@@ -116,7 +116,7 @@ func UpdateOrgQuota(context cfworkflow_helpers.UserContext) {
 		quotaUrl, err := helpers.GetOrgQuotaDefinitionUrl(string(orgGuid), context.Timeout)
 		Expect(err).NotTo(HaveOccurred())
 
-		cf.Cf("curl", quotaUrl, "-X", "PUT", "-d", "'{\"total_reserved_route_ports\":-1}'").Wait(context.Timeout)
+		cf.Cf("curl", quotaUrl, "-X", "PUT", "-d", `'{"total_reserved_route_ports":-1}'`).Wait(context.Timeout)
 	})
 }
 
