@@ -38,7 +38,7 @@ var _ = Describe("Tcp Routing", func() {
 			externalPort1 = routing_helpers.CreateTcpRouteWithRandomPort(spaceName, domainName, DEFAULT_TIMEOUT)
 
 			// Uses --no-route flag so there is no HTTP route
-			routing_helpers.PushAppNoStart(appName, tcpDropletReceiver, routingConfig.GoBuildpackName, "", CF_PUSH_TIMEOUT, "256M", "-c", cmd, "--no-route", "-s", "cflinuxfs3")
+			routing_helpers.PushAppNoStart(appName, tcpDropletReceiver, routingConfig.GoBuildpackName, "", CF_PUSH_TIMEOUT, "256M", "-c", cmd, "--no-route", "-s", "cflinuxfs4")
 			routing_helpers.EnableDiego(appName, DEFAULT_TIMEOUT)
 			routing_helpers.UpdatePorts(appName, []uint16{3333}, DEFAULT_TIMEOUT)
 			routing_helpers.CreateRouteMapping(appName, "", externalPort1, 3333, DEFAULT_TIMEOUT)
@@ -75,7 +75,7 @@ var _ = Describe("Tcp Routing", func() {
 				cmd := fmt.Sprintf("tcp-droplet-receiver --serverId=%s", serverId2)
 
 				// Uses --no-route flag so there is no HTTP route
-				routing_helpers.PushAppNoStart(secondAppName, tcpDropletReceiver, routingConfig.GoBuildpackName, "", CF_PUSH_TIMEOUT, "256M", "-c", cmd, "--no-route", "-s", "cflinuxfs3")
+				routing_helpers.PushAppNoStart(secondAppName, tcpDropletReceiver, routingConfig.GoBuildpackName, "", CF_PUSH_TIMEOUT, "256M", "-c", cmd, "--no-route", "-s", "cflinuxfs4")
 				routing_helpers.EnableDiego(secondAppName, DEFAULT_TIMEOUT)
 				routing_helpers.UpdatePorts(secondAppName, []uint16{3333}, DEFAULT_TIMEOUT)
 				routing_helpers.CreateRouteMapping(secondAppName, "", externalPort1, 3333, DEFAULT_TIMEOUT)
@@ -159,7 +159,7 @@ var _ = Describe("Tcp Routing", func() {
 			externalPort1 = routing_helpers.CreateTcpRouteWithRandomPort(spaceName, domainName, DEFAULT_TIMEOUT)
 
 			// Uses --no-route flag so there is no HTTP route
-			routing_helpers.PushAppNoStart(appName, tcpSampleReceiver, routingConfig.GoBuildpackName, "", 2*time.Minute, "256M", "-c", cmd, "--no-route", "-s", "cflinuxfs3")
+			routing_helpers.PushAppNoStart(appName, tcpSampleReceiver, routingConfig.GoBuildpackName, "", 2*time.Minute, "256M", "-c", cmd, "--no-route", "-s", "cflinuxfs4")
 			routing_helpers.EnableDiego(appName, DEFAULT_TIMEOUT)
 			routing_helpers.UpdatePorts(appName, []uint16{appPort1, appPort2}, DEFAULT_TIMEOUT)
 			routing_helpers.CreateRouteMapping(appName, "", externalPort1, appPort1, DEFAULT_TIMEOUT)

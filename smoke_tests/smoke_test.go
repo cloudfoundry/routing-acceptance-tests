@@ -60,7 +60,7 @@ var _ = Describe("SmokeTests", func() {
 	})
 
 	It("map tcp route to app successfully ", func() {
-		routing_helpers.PushAppNoStart(appName, tcpSampleGolang, routingConfig.GoBuildpackName, "", CF_PUSH_TIMEOUT, "256M", "--no-route", "-s", "cflinuxfs3")
+		routing_helpers.PushAppNoStart(appName, tcpSampleGolang, routingConfig.GoBuildpackName, "", CF_PUSH_TIMEOUT, "256M", "--no-route", "-s", "cflinuxfs4")
 		routing_helpers.EnableDiego(appName, DEFAULT_TIMEOUT)
 		routing_helpers.MapRandomTcpRouteToApp(appName, domainName, DEFAULT_TIMEOUT)
 		routing_helpers.StartApp(appName, DEFAULT_TIMEOUT)
