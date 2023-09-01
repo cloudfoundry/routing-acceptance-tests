@@ -1,6 +1,8 @@
 package http_routes
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
 	"strconv"
 	"time"
@@ -21,7 +23,12 @@ func Rtr(args ...string) *Session {
 	if routerApiConfig.SkipSSLValidation {
 		args = append(args, "--skip-tls-verification")
 	}
-	session, err := Start(exec.Command("rtr", args...), GinkgoWriter, GinkgoWriter)
+	rtr, exists := os.LookupEnv("ROUTING_API_CLI_BINARY")
+	if !exists {
+		fmt.Println("You need routing-api-cli (rtr) installed and set ROUTING_API_CLI_BINARY env variable")
+		os.Exit(1)
+	}
+	session, err := Start(exec.Command(rtr, args...), GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 
 	return session

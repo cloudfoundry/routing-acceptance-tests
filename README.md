@@ -99,3 +99,18 @@ export CONFIG=$PWD/integration_config.json
 - If `tcp_apps_domain` property is empty, smoke tests create a temporary shared domain and use the `addresses` field to connect to TCP application.
 - Optionally run the smoke tests in verbose mode: `./bin/smoke_tests -v`.
 - `tcp_router_group` - The router group to use for creating tcp routes.
+
+## Development
+
+### <a name="dependencies"></a>Dependencies
+
+This repository's dependencies are managed using
+[routing-release](https://github.com/cloudfoundry/routing-release). Please refer to documentation in that repository for setting up tests
+
+### Executables
+
+1. `bin/test.bash`: This file is used to run test in Docker & CI. Please refer to [Dependencies](#dependencies) for setting up tests.
+
+### Reporting issues and requesting features
+
+Please report all issues and feature requests in [cloudfoundry/routing-release](https://github.com/cloudfoundry/routing-release).
