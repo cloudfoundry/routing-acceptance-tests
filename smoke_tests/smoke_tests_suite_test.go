@@ -8,7 +8,6 @@ import (
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
 	routing_api "code.cloudfoundry.org/routing-api"
-	cf_helpers "github.com/cloudfoundry/cf-test-helpers/v2/helpers"
 	cfworkflow_helpers "github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,14 +27,7 @@ var (
 func TestSmokeTests(t *testing.T) {
 	routingConfig = helpers.LoadConfig()
 	RegisterFailHandler(Fail)
-	componentName := "SmokeTests Suite"
-	rs := []Reporter{}
-	if routingConfig.ArtifactsDirectory != "" {
-		cf_helpers.EnableCFTrace(routingConfig.Config, componentName)
-		rs = append(rs, cf_helpers.NewJUnitReporter(routingConfig.Config, componentName))
-	}
-	RunSpecsWithDefaultAndCustomReporters(t, componentName, rs)
-
+	RunSpecs(t, "SmokeTestsSuite")
 }
 
 var _ = BeforeSuite(func() {
