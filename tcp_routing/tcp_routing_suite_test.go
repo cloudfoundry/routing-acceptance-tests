@@ -17,7 +17,6 @@ import (
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
 	routing_api "code.cloudfoundry.org/routing-api"
 	"github.com/cloudfoundry/cf-test-helpers/v2/generator"
-	cf_helpers "github.com/cloudfoundry/cf-test-helpers/v2/helpers"
 	cfworkflow_helpers "github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 )
 
@@ -34,16 +33,7 @@ func TestTcpRouting(t *testing.T) {
 		CF_PUSH_TIMEOUT = time.Duration(routingConfig.CfPushTimeout) * time.Second
 	}
 
-	componentName := "TCP Routing"
-
-	rs := []Reporter{}
-
-	if routingConfig.ArtifactsDirectory != "" {
-		cf_helpers.EnableCFTrace(routingConfig.Config, componentName)
-		rs = append(rs, cf_helpers.NewJUnitReporter(routingConfig.Config, componentName))
-	}
-
-	RunSpecsWithDefaultAndCustomReporters(t, componentName, rs)
+	RunSpecs(t, "TCP Routing")
 }
 
 const preallocatedExternalPorts = 100
