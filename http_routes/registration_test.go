@@ -38,18 +38,20 @@ var _ = Describe("Registration", func() {
 			eventsSession = Rtr(args...)
 
 			var eventsSessionLogs []byte
-			Eventually(func() string {
-				logAdd, err := ioutil.ReadAll(eventsSession.Out)
-				Expect(err).ToNot(HaveOccurred())
-				eventsSessionLogs = append(eventsSessionLogs, logAdd...)
-				return string(eventsSessionLogs)
-			}, 70*time.Second).Should(SatisfyAll(
-				ContainSubstring(`"port":`),
-				ContainSubstring(`"route":`),
-				ContainSubstring(`"Action":"Upsert"`),
-			))
+			if routerApiConfig.UseHttp {
+				Eventually(func() string {
+					logAdd, err := ioutil.ReadAll(eventsSession.Out)
+					Expect(err).ToNot(HaveOccurred())
+					eventsSessionLogs = append(eventsSessionLogs, logAdd...)
+					return string(eventsSessionLogs)
+				}, 70*time.Second).Should(SatisfyAll(
+					ContainSubstring(`"port": 3000`),
+					ContainSubstring(`"route":`),
+					ContainSubstring(`"Action":"Upsert"`),
+				))
 
-			eventsSessionLogs = nil
+				eventsSessionLogs = nil
+			}
 
 			args = []string{"register", routeJSON}
 			session := Rtr(args...)
