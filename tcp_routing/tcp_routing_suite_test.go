@@ -2,21 +2,19 @@ package tcp_routing_test
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/lager/v3/lagertest"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gexec"
 
 	"testing"
 
-	routing_helpers "code.cloudfoundry.org/cf-routing-test-helpers/helpers"
+	. "github.com/onsi/gomega/gexec"
+
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
 	routing_api "code.cloudfoundry.org/routing-api"
-	"github.com/cloudfoundry/cf-test-helpers/v2/generator"
 	cfworkflow_helpers "github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 )
 
@@ -73,21 +71,9 @@ var _ = BeforeSuite(func() {
 	environment.Setup()
 
 	helpers.ValidateRouterGroupName(adminContext, routingConfig.TCPRouterGroup)
-
-	domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP", "DOMAIN"), routingConfig.AppsDomain)
-
-	cfworkflow_helpers.AsUser(adminContext, adminContext.Timeout, func() {
-		routerGroupName := routingConfig.TCPRouterGroup
-		routing_helpers.CreateSharedDomain(domainName, routerGroupName, DEFAULT_TIMEOUT)
-		routing_helpers.VerifySharedDomain(domainName, DEFAULT_TIMEOUT)
-	})
-
 })
 
 var _ = AfterSuite(func() {
-	cfworkflow_helpers.AsUser(adminContext, adminContext.Timeout, func() {
-		routing_helpers.DeleteSharedDomain(domainName, DEFAULT_TIMEOUT)
-	})
 	environment.Teardown()
 	CleanupBuildArtifacts()
 })

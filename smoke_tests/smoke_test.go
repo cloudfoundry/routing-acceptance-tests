@@ -9,7 +9,6 @@ import (
 	routing_helpers "code.cloudfoundry.org/cf-routing-test-helpers/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers/assets"
-	"github.com/cloudfoundry/cf-test-helpers/v2/generator"
 	cfworkflow_helpers "github.com/cloudfoundry/cf-test-helpers/v2/workflowhelpers"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -30,21 +29,14 @@ var (
 var _ = Describe("SmokeTests", func() {
 
 	BeforeEach(func() {
-		if routingConfig.TcpAppDomain != "" {
-			domainName = routingConfig.TcpAppDomain
-			cfworkflow_helpers.AsUser(adminContext, adminContext.Timeout, func() {
-				routing_helpers.VerifySharedDomain(routingConfig.TcpAppDomain, DEFAULT_TIMEOUT)
-			})
-			routerIps = append(routerIps, domainName)
-		} else {
-			domainName = fmt.Sprintf("%s.%s", generator.PrefixedRandomName("TCP", "DOMAIN"), routingConfig.AppsDomain)
+		Expect(routingConfig.TcpAppDomain).NotTo(BeEmpty(), "Before running these tests, you must configure tcp_apps_domain. The domain should resolve to the IP of the TCP load balancer in your deployment.")
 
-			cfworkflow_helpers.AsUser(adminContext, adminContext.Timeout, func() {
-				routing_helpers.CreateSharedDomain(domainName, routingConfig.TCPRouterGroup, DEFAULT_TIMEOUT)
-				routing_helpers.VerifySharedDomain(domainName, DEFAULT_TIMEOUT)
-			})
-			routerIps = routingConfig.Addresses
-		}
+		domainName = routingConfig.TcpAppDomain
+		cfworkflow_helpers.AsUser(adminContext, adminContext.Timeout, func() {
+			routing_helpers.VerifySharedDomain(routingConfig.TcpAppDomain, DEFAULT_TIMEOUT)
+		})
+
+		routerIps = append(routerIps, domainName)
 		appName = routing_helpers.GenerateAppName()
 		helpers.UpdateOrgQuota(adminContext)
 	})
