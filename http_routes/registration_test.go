@@ -45,7 +45,7 @@ var _ = Describe("Registration", func() {
 					eventsSessionLogs = append(eventsSessionLogs, logAdd...)
 					return string(eventsSessionLogs)
 				}, 70*time.Second).Should(SatisfyAll(
-					ContainSubstring(`"port": 3000`),
+					ContainSubstring(`"port":3000`),
 					ContainSubstring(`"route":`),
 					ContainSubstring(`"Action":"Upsert"`),
 				))
