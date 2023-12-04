@@ -117,7 +117,7 @@ func UpdateOrgQuota(context cfworkflow_helpers.UserContext) {
 		quotaUrl, err := helpers.GetOrgQuotaDefinitionUrl(string(orgGuid), context.Timeout)
 		Expect(err).NotTo(HaveOccurred())
 
-		Eventually(cf.Cf("curl", quotaUrl, "-X", "PUT", "-d", `'{\"total_reserved_route_ports\":-1}'`), context.Timeout).Should(gexec.Exit(0))
+		Eventually(cf.Cf("curl", quotaUrl, "-X", "PUT", "-d", `'{"total_reserved_route_ports":-1}'`), context.Timeout).Should(gexec.Exit(0))
 	})
 }
 
