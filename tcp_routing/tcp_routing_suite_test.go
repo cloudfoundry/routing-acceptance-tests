@@ -67,6 +67,7 @@ var _ = BeforeSuite(func() {
 	adminContext.TestSpace = regUser.TestSpace
 	adminContext.Org = regUser.Org
 	adminContext.Space = regUser.Space
+	domainName = routingConfig.TcpAppDomain
 
 	environment.Setup()
 
