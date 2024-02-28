@@ -23,7 +23,6 @@ var (
 	adminContext            cfworkflow_helpers.UserContext
 	DEFAULT_RW_TIMEOUT      = 2 * time.Second
 	DEFAULT_CONNECT_TIMEOUT = 5 * time.Second
-	regUser                 cfworkflow_helpers.UserContext
 )
 
 var _ = Describe("SmokeTests", func() {

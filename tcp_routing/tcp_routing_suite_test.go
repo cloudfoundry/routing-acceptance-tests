@@ -34,8 +34,6 @@ func TestTcpRouting(t *testing.T) {
 	RunSpecs(t, "TCP Routing")
 }
 
-const preallocatedExternalPorts = 100
-
 var (
 	DEFAULT_TIMEOUT          = 2 * time.Minute
 	DEFAULT_POLLING_INTERVAL = 5 * time.Second
