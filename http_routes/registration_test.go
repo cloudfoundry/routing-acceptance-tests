@@ -1,7 +1,7 @@
 package http_routes
 
 import (
-	"io/ioutil"
+	"io"
 	"time"
 
 	"code.cloudfoundry.org/routing-acceptance-tests/helpers"
@@ -40,7 +40,7 @@ var _ = Describe("Registration", func() {
 			var eventsSessionLogs []byte
 			if routerApiConfig.UseHttp {
 				Eventually(func() string {
-					logAdd, err := ioutil.ReadAll(eventsSession.Out)
+					logAdd, err := io.ReadAll(eventsSession.Out)
 					Expect(err).ToNot(HaveOccurred())
 					eventsSessionLogs = append(eventsSessionLogs, logAdd...)
 					return string(eventsSessionLogs)
@@ -58,7 +58,7 @@ var _ = Describe("Registration", func() {
 			Eventually(session.Out, DEFAULT_TIMEOUT, DEFAULT_POLLING_INTERVAL).Should(Say("Successfully registered routes"))
 
 			Eventually(func() string {
-				logAdd, err := ioutil.ReadAll(eventsSession.Out)
+				logAdd, err := io.ReadAll(eventsSession.Out)
 				Expect(err).ToNot(HaveOccurred())
 				eventsSessionLogs = append(eventsSessionLogs, logAdd...)
 				return string(eventsSessionLogs)
