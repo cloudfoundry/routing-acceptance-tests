@@ -1,8 +1,0 @@
-#!/bin/bash
-
-set -e -x
-
-go vet ./...
-go install -v github.com/onsi/ginkgo/v2/ginkgo
-
-ginkgo -r -race "$@" smoke_tests/
