@@ -111,7 +111,8 @@ func NewTokenFetcher(routerApiConfig RoutingConfig, logger lager.Logger) uaaclie
 }
 
 func UpdateOrgQuota(context cfworkflow_helpers.UserContext) {
-	os.Setenv("CF_TRACE", "false")
+	err := os.Setenv("CF_TRACE", "false")
+	Expect(err).NotTo(HaveOccurred())
 	cfworkflow_helpers.AsUser(context, context.Timeout, func() {
 		orgGuid := cf.Cf("org", context.Org, "--guid").Wait(context.Timeout).Out.Contents()
 		quotaUrl, err := helpers.GetOrgQuotaDefinitionUrl(string(orgGuid), context.Timeout)
