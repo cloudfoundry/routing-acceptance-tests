@@ -11,13 +11,17 @@ func main() {
 	http.HandleFunc("/", hello)
 	port := os.Getenv("PORT")
 	fmt.Printf("Listening on %s...", port)
-	err := http.ListenAndServe(":"+port, nil)
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%s", port),
+		Handler: nil,
+	}
+	err := server.ListenAndServe()
 	if err != nil {
 		panic(err)
 	}
 }
 
-func hello(res http.ResponseWriter, req *http.Request) {
-	fmt.Println("Recieved request ", time.Now())
+func hello(res http.ResponseWriter, _ *http.Request) {
+	fmt.Println("Received request ", time.Now())
 	fmt.Fprintln(res, "go, world")
 }
