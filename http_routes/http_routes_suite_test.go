@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strconv"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -17,7 +16,7 @@ import (
 )
 
 func Rtr(args ...string) *Session {
-	portString := strconv.Itoa(routerApiConfig.OAuth.Port)
+	portString := fmt.Sprintf("%d", routerApiConfig.OAuth.Port)
 	oauthUrl := routerApiConfig.OAuth.TokenEndpoint + ":" + portString
 	args = append(args, "--api", routerApiConfig.RoutingApiUrl, "--client-id", routerApiConfig.OAuth.ClientName, "--client-secret", routerApiConfig.OAuth.ClientSecret, "--oauth-url", oauthUrl)
 	if routerApiConfig.SkipSSLValidation {

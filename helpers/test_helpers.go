@@ -37,7 +37,7 @@ type OAuthConfig struct {
 	TokenEndpoint string `json:"token_endpoint"`
 	ClientName    string `json:"client_name"`
 	ClientSecret  string `json:"client_secret"`
-	Port          int    `json:"port"`
+	Port          uint16 `json:"port"`
 }
 
 func loadDefaultTimeout(conf *RoutingConfig) {
