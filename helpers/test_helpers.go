@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	"code.cloudfoundry.org/cf-routing-test-helpers/helpers"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager/v3"
 	"code.cloudfoundry.org/routing-api/uaaclient"
@@ -115,17 +114,15 @@ func UpdateOrgQuota(context cfworkflow_helpers.UserContext) {
 	Expect(err).NotTo(HaveOccurred())
 	cfworkflow_helpers.AsUser(context, context.Timeout, func() {
 		orgGuid := cf.Cf("org", context.Org, "--guid").Wait(context.Timeout).Out.Contents()
-		quotaUrl, err := helpers.GetOrgQuotaDefinitionUrl(string(orgGuid), context.Timeout)
-		Expect(err).NotTo(HaveOccurred())
 		f, err := os.CreateTemp("", "curl-json")
 		Expect(err).NotTo(HaveOccurred())
 		defer f.Close()
 		defer os.Remove(f.Name())
-		data := []byte(`{"total_reserved_route_ports":-1}`)
+		data := []byte(`{"routes": {"total_reserved_route_ports":-1} }`)
 		_, err = f.Write(data)
 		Expect(err).NotTo(HaveOccurred())
 
-		Eventually(cf.Cf("curl", quotaUrl, "-X", "PUT", "-d", fmt.Sprintf("@%s", f.Name())), context.Timeout).Should(gexec.Exit(0))
+		Eventually(cf.Cf("curl", fmt.Sprintf("/v3/organization_quotas/%s", orgGuid), "-X", "PATCH", "-d", fmt.Sprintf("@%s", f.Name())), context.Timeout).Should(gexec.Exit(0))
 	})
 }
 
