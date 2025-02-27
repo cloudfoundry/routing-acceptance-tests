@@ -1,5 +1,9 @@
 # routing-acceptance-tests
 
+> [!CAUTION]
+> This repository has been in-lined (using git-subtree) into routing-release. Please make any
+> future contributions directly to routing-release.
+
 [![Go Report
 Card](https://goreportcard.com/badge/code.cloudfoundry.org/routing-acceptance-tests)](https://goreportcard.com/report/code.cloudfoundry.org/routing-acceptance-tests)
 [![Go
